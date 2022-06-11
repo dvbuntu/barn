@@ -113,7 +113,7 @@ for(r in regions){
     #out_file$prediction <- as.numeric(predict(mod_rf, evaluation[,data_cols ], type = "prob")[,"1"]) 
     out_file$time <- t[3]
 
-    write.csv(out_file, sprintf("%s/%s_bart", outdir, s), row.names = FALSE)
+    write.csv(out_file, sprintf("%s/%s_bart.csv", outdir, s), row.names = FALSE)
     print(n)
   }
 }
