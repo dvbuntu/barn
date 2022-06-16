@@ -76,7 +76,7 @@ class NN(object):
         self.model.fit(X,Y)
 
     def log_prior(self):
-        return scipy.stats.poisson.logpmf(self.num_nodes, N.l)
+        return scipy.stats.poisson.logpmf(self.num_nodes, self.l)
 
     def log_likelihood(self, X, Y):
         # compute residuals
@@ -112,12 +112,14 @@ def A(Np, N, X, Y, q=0.5):
 class BARN(object):
     def __init__(self, num_nets=10,
             trans_probs=[0.4, 0.6],
-            trans_options=['grow', 'shrink']):
+            trans_options=['grow', 'shrink'],
+            dname='default_name'):
         self.num_nets = num_nets
         # maybe should bias to shrinking to avoid just overfitting?
         # or compute acceptance resid on validation data?
         self.trans_probs = trans_probs
         self.trans_options = trans_options
+        self.dname = dname
 
     def setup_nets(self, l=10, lr=0.01):
         self.cyberspace = [NN(1, l=l, lr=lr) for i in range(self.num_nets)]
@@ -181,38 +183,44 @@ class BARN(object):
         self.Xte = Xte
         self.Yte = Yte
 
-    def viz(self, outname='results.png'):
-        fig, ax = plt.subplots(1,3, sharex=True, sharey=True, squeeze=True)
-        fig.set_size_inches(12,4)
+    def predict(self, X):
+        return np.sum([N.model.predict(X) for N in self.cyberspace], axis=0)
+
+    def viz(self, outname='results.png', extra_slots=0, close=True):
+        fig, ax = plt.subplots(1,3+extra_slots, squeeze=True)
+        fig.set_size_inches(12+4*extra_slots,4)
         # check initial fit
         r2h = metrics.r2_score(self.Yte, self.Yte_init)
         rmseh = metrics.mean_squared_error(self.Yte, self.Yte_init, squared=False)
 
-        ax[0].plot([np.min(self.Yte), np.max(self.Yte)],
-                   [np.min(self.Yte), np.max(self.Yte)])
-        ax[0].scatter(self.Yte,self.Yte_init, c='orange') # somewhat decent on synth, gets lousy at edge, which makes sense
-        ax[0].set_title('Initial BARN')
-        ax[0].set_ylabel('Prediction')
-        ax[0].text(0.05, 0.85, f'$R^2 = $ {r2h:0.4}\n$RMSE = $ {rmseh:0.4}', transform=ax[0].transAxes)
+        # Plot phi results
+        ax[0].plot(self.phi)
+        ax[0].set_xlabel('MCMC Iteration')
+        ax[0].set_ylabel('RMSE')
+        ax[0].set_title(f'MCMC Error Progression')
 
-        # final fit
-        Yh2 = np.sum([N.model.predict(self.Xte) for N in self.cyberspace], axis=0)
-        r2h2 = metrics.r2_score(self.Yte, Yh2)
-        rmseh2 = metrics.mean_squared_error(self.Yte, Yh2, squared=False)
         ax[1].plot([np.min(self.Yte), np.max(self.Yte)],
                    [np.min(self.Yte), np.max(self.Yte)])
-        ax[1].scatter(self.Yte,Yh2, c='orange')
-        ax[1].set_title('Final BARN')
-        ax[1].set_xlabel('Target')
-        ax[1].text(0.05, 0.85, f'$R^2 = $ {r2h2:0.4}\n$RMSE = $ {rmseh2:0.4}', transform=ax[1].transAxes)
+        ax[1].scatter(self.Yte,self.Yte_init, c='orange') # somewhat decent on synth, gets lousy at edge, which makes sense
+        ax[1].set_title('Initial BARN')
+        ax[1].set_ylabel('Prediction')
+        ax[1].text(0.05, 0.85, f'$R^2 = $ {r2h:0.4}\n$RMSE = $ {rmseh:0.4}', transform=ax[1].transAxes)
 
-        # Plot phi results
-        ax[2].plot(self.phi)
-        ax[2].xlabel('MCMC Iteration')
-        ax[2].ylabel('RMSE')
-        ax[2].title(f'MCMC Error Progression')
+        # final fit
+        Yh2 = self.predict(self.Xte)
+        r2h2 = metrics.r2_score(self.Yte, Yh2)
+        rmseh2 = metrics.mean_squared_error(self.Yte, Yh2, squared=False)
+        ax[2].plot([np.min(self.Yte), np.max(self.Yte)],
+                   [np.min(self.Yte), np.max(self.Yte)])
+        ax[2].scatter(self.Yte,Yh2, c='orange')
+        ax[2].set_title('Final BARN')
+        ax[2].set_xlabel('Target')
+        ax[2].text(0.05, 0.85, f'$R^2 = $ {r2h2:0.4}\n$RMSE = $ {rmseh2:0.4}', transform=ax[2].transAxes)
+
         fig.savefig(outname)
-        plt.close()
+        if close:
+            plt.close()
+        return fig, ax, rmseh2
 
     def batch_means(self, num_batch=20, batch_size=None, np_out='val_resid.npy', outfile='var_all.csv', mode='a', burn=None):
         if burn is None:
@@ -225,7 +233,8 @@ class BARN(object):
         batch_phi = np.mean(self.phi[burn:].reshape((num_batch, batch_size)), axis=1)
         var = np.sum((batch_phi-mu)**2)/(num_batch*(num_batch-1))
         with open(outfile, mode) as f:
-            print(f'{dname}, {var}', file=f)
+            print(f'{self.dname}, {var}', file=f)
+        return var
 
     def save(self, outname):
         # This only saves the last iteration of full models, but that's something

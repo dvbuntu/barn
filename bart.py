@@ -158,7 +158,7 @@ def make_dummy_trees(trees, ymean, n_features):
             'values': np.array([0, ymean, ymean]).reshape((3,1,1))*(ntree+1)
         })
     dummy.estimators_[-1].n_outputs_ = 1
-    dummy.n_features_ = n_features
+    dummy.n_features_in = n_features
 
     return dummy
 
