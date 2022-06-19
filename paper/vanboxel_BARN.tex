@@ -15,24 +15,32 @@
 \author{Dan Van Boxel}
 \date{\today}
 
+\usepackage{xcolor}
+\newcommand{\dvb}[1]{\textcolor{blue}{DVB: #1}}
+\newcommand{\crp}[1]{\textcolor{olive}{CRP: #1}}
+
 \begin{document}
 \maketitle
 
 \begin{abstract}
 
-    We apply Bayesian Additive Regression Tree (BART) principles to training an ensemble of small neural networks for regression tasks.  Using Markov Chain Monte Carlo, we sample from the space of single hidden layer neural networks conditioned on how well they fit the data.  To create an ensemble of these, we apply Gibbs' sampling to update each network against the residual target value (i.e. subtracting the effect of the other networks).  We demonstrate the effectiveness of this technique on several benchmark regression problems, comparing it to equivalent neuron count single neural networks as well as equivalent tree count BART.  Our Bayesian Additive Regression Networks (BARN) provide more consistent and often more accurate results, at the cost of significantly greater computation time.
+    We apply Bayesian Additive Regression Tree (BART) principles to training an ensemble of small neural networks for regression tasks.  Using Markov Chain Monte Carlo, Bayesian Additive Regression Trees (BARN) samples from the space of single hidden layer neural networks that are conditioned on their fit to data.  To create an ensemble of these, we apply Gibbs' sampling to update each network against the residual target value (i.e. subtracting the effect of the other networks).  We examine the effectiveness of BARN on several benchmark regression tasks, comparing it to equivalent neuron count single neural networks as well as equivalent tree count BART.  Our Bayesian Additive Regression Networks (BARN) provide more consistent and often more accurate results, at the cost of significantly greater computation time. \crp{Potentially add some details on model performance or when is best to use BARN or future perspectives.}
 
 \end{abstract}
 
 \section{Introduction}\label{sec:intro}
 
-Training a cooperative set of weak models (i.e. an ensemble of small models) rather than a single large model has proven itself an effective machine learning technique \cite{dietterich2000ensemble}.  While Random Forests (RF) \cite{ho1995random} are one of the most well-known ensembling methods, another tree-based technique is Bayesian Additive Regression Trees (BART) \cite{chipman2010bart}.  On many benchmark problems, BART even outperforms RF \cite{biau2019neural}.  Simultaneously, neural networks (NNs) have become extremely accurate on a wide variety of tasks, attracting attention from more traditional machine learning methods.
+\crp{Clarify BARN $\ne$ Neural Decision Trees \cite{balestriero2017neural}}
 
-Seeking even better methods, some researchers have attempted to combine these approaches.  Neural Random Forests \cite{biau2019neural}, for example, builds NNs that are numerically equivalent to RFs, and then trains them further.  Recent research \cite{vanboxel2021neural}, however, suggests creating neural networks this way may be ineffective.
+\crp{Maybe this is not entirely necessary but some folks might find useful to directly see that this is a supervised technique. Similarly, it'd be important to explicitly indicate that BARN is limited to regressions despite NNs being also capable of behaving as classifiers...}
 
-Rather than copy an existing ensembling approach exactly into neural networks, we instead adapt the conditional Monte Carlo Markov Chain (MCMC) learning process of BART \cite{chipman2010bart} to an ensemble of neural network architectures.  That is, we train each small NN on the residual of the target value and the summed prediction of the remaining trees, and we further condition acceptance of a model following the Bayes CART method \cite{chipman1998bayesian}.  This sampling procedure of Bayesian Additive Regression Networks (BARN) generalizes the BART method to a new model type.
+Training a cooperative set of weak models (i.e. an ensemble of small models) rather than a single large model has proven itself an effective machine learning technique \cite{dietterich2000ensemble,hansen1990neural,seni2010ensemble,lee2020comparing}.  While Random Forests (RF) \cite{ho1995random,breiman2001random} are one of the most well-known ensemble methods, multiple other approaches have been proposed over the years, \cite[provide some reviews]{way2012advances,dong2020survey}.  One tree-based technique that has outperformed more recent models \cite{biau2019neural} is Bayesian Additive Regression Trees (BART) \cite{chipman2010bart}.  At the same time, neural networks (NNs) have become extremely accurate on a wide variety of tasks \dvb{cite an NN survey here}, attracting attention from more traditional machine learning methods.
 
-To test this approach, we apply BARN to a variety of benchmark data sets \cite{Dua:2019} as used in the Neural Random Forests \cite{biau2019neural} study.  To limit computation time, we restrict our analysis to prototype size and number networks in the ensemble.  Additionally, we train equivalently sized (to the entire ensemble) NNs and equivalent-count BART forests for comparison.  We find that BARN, though expensive (in its current implementation), is able to reliably match or beat performance of both alternatives.
+Seeking even better methods, some researchers have attempted to combine tree-based and NN-based approaches.  For instance, Neural Random Forests \cite{biau2019neural}, builds NNs that are numerically equivalent to RFs, and then continues to train them as though they were newly initialized networks.  Recent research \cite{vanboxel2021neural}, however, suggests creating neural networks this way may not significantly improve performance over both similarly parametrized RFs and NNs.
+
+Rather than copy an existing ensembling approach exactly into neural networks \cite[for example]{biau2019neural}, we instead adapt the conditional Monte Carlo Markov Chain (MCMC) learning process of BART \cite{chipman2010bart} to an ensemble of neural network architectures.  That is, we train a series of NNs, each one on the residual of the target value and the summed prediction of the remaining NNs.  We further condition acceptance of a model following the Bayes CART method \cite{chipman1998bayesian}.  This sampling procedure of Bayesian Additive Regression Networks (BARN) generalizes the BART method to a new model type.  We describe this in more detail in \autoref{sec:method}.
+
+To evaluate the effectiveness of this approach, we apply BARN to a variety of benchmark data sets \cite{Dua:2019} as used in the Neural Random Forests \cite{biau2019neural} study.  To limit computation time, we restrict our analysis to prototype size (mean 4 neurons) and number networks (fixed at 10) in the ensemble.  We additionally train, however, equivalent sized (to the entire ensemble) NNs and equivalent-count BART forests (i.e. 10 decision trees) for comparison.  We find that BARN, though expensive (in its current implementation), is able to reliably match or beat performance of both alternatives.
 
 \section{Related Work}\label{sec:related}
 
