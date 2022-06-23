@@ -57,15 +57,17 @@ To evaluate the effectiveness of this approach, we apply BARN to a variety of be
 \section{Background}\label{sec:background}
 
 
-To understand the technique we develop to train an ensemble of neural networks, we first detail some of the core components to the method.  While many specifics are beyond the scope of this paper, we intend to convey the necessary basics of machine learning and the M-H algorithm.
+To understand the technique we develop to train an ensemble of neural networks (BARN), we first detail some of the core components to the method.  While many specifics (e.g. full Monte Carlo theory, supporting model assumptions, etc) are beyond the scope of this paper, we intend to convey the necessary basics of machine learning and the M-H algorithm.
 
-While machine learning takes many forms, we focus on neural networks to model regression problems.  For a given data point, we model each target value, $y \in \mathbb{R}$ as some function of independent variables, $x \in \mathbb{R}^n$, such that for each data point $x_i$, we have some error term, $\epsilon_i$, and
+% TODO: basic bayesian theory
+
+While machine learning takes many forms, we focus on neural networks to model regression problems.  For a given data point, we model each target value, $y \in \mathbb{R}$ as some function of independent variables, $x \in \mathbb{R}^n$, such that for each data point $x_i$, we have some error term, $\epsilon_i$, and $y_i$.
 
 $$
 y_i = f(x_i) + \epsilon_i
 $$
 
-In ordinary linear regression (OLS), we have a linear function $f(x_i) = \sum_j w_j x_{ij}$ (where $x_{ij}$ is the $j$th variable of the $i$th data point), and we assume the error terms are normally distributed.  If the target really is a linear function of the input variables plus some noise, this can be a very accurate model.  But if the true model is something nonlinear like $y_i = 2x_{i1} + 3x_{i2}^2 + \epsilon_i$, this approach may fail.  We need some nonlinear component to accurately model the square term (e.g. generating a new $x_{i3} =x_{i2}^2$).
+In ordinary linear regression (OLS), we have a linear function $f(x_i) = \sum_j w_j x_{ij}$ (where $x_{ij}$ is the $j$th variable of the $i$th data point), and we assume the error terms ($\epsilon_i$) are normally distributed.  If the target really is a linear function of the input variables plus some noise (and a few other mild assumptions), this can be a very accurate model.  But this approach may fail if the true model is something nonlinear (e.g. $y_i = 2x_{i1} + 3x_{i2}^2 + \epsilon_i$).  We would need a nonlinear component in our model to accurately capture the nonlinear term in the data (e.g. generating a new $x_{i3} =x_{i2}^2$).
 
 Neural networks provide a very general nonlinear structure and train weights to model precisely these kinds of behaviors \cite{hastie2009elements}.  First, we construct a single ``neuron'',
 
@@ -73,7 +75,7 @@ $$
 h_k(x_i) = g(\sum_j w_j x_{ij})
 $$
 
-where $w_j$ is some trainable parameter, and $g$ is a nonlinear ``activation'' function.  We can create many neurons (e.g. $h_1, h_2, \cdots$) based on the same input $x$ using different sets of weights $w_j$ (sometimes denoted $w_J^k$ for indexing).  Each $h_k$ then represents a different nonlinear function of the input.  We refer to this set of neurons as a ``hidden layer''.  From this, we can apply OLS to the neuron outputs to model $y$, or we can construct another layer using the outputs of the previous layer (i.e. using $h_k$ values rather than $x$ values directly).  \autoref{fig:nn} shows an example layout of a single hidden layer neural network.  $x$ values are inputs into the $h_k$ functions of the hidden layer.  And a weighted sum of $h_k$ values  (i.e. OLS) predicts the target $y$ value, completing the NN calculation.
+where $w_j$ is some trainable parameter, and $g$ is a nonlinear ``activation'' function.  We can create many neurons (e.g. $h_1, h_2, h_3$) based on the same input $x$ using different sets of weights $w_j$ (sometimes denoted $w_J^k$ for indexing).  Thus each $h_k$ represents a different nonlinear function of the input.  We refer to this set of neurons as a ``hidden layer''.  Next, we can ether apply an OLS to the neuron outputs to model $y$, or we can construct another layer using the outputs of the previous layer (i.e. using $h_k$ values rather than $x$ values directly).  \autoref{fig:nn} shows an example layout of a single hidden layer neural network.  $x$ values are inputs into the $h_k$ functions of the hidden layer.  And a weighted sum of $h_k$ values  (i.e. OLS) predicts the target $y$ value, completing the NN calculation.
 
 \begin{figure}[htb]
 \centering
@@ -82,50 +84,50 @@ where $w_j$ is some trainable parameter, and $g$ is a nonlinear ``activation'' f
     \label{fig:nn}
 \end{figure}
 
-This specifies the \emph{architecture} of the NN, but we still need to determine the values of all the $w$ weights.  This is an optimization problem for which one can apply many methods.  Common approaches are gradient-based backpropagation such as Adam \cite{kingma2014adam} or stochastic gradient descent \cite{hastie2009elements}.  The details are not critical to our analysis; only that our network activation functions be almost everywhere differentiable so that we can compute gradients.
+Though this specifies the \emph{architecture} of the NN, but we still need to determine the values of all the $w$ weights.  Determining the values of $w$ is an optimization problem for which one can apply many methods.  Some common approaches are gradient-based backpropagation such as Adam \cite{kingma2014adam} or stochastic gradient descent \cite{hastie2009elements}.  The details are not critical to our analysis; only that our network activation functions be almost everywhere differentiable so that we can compute gradients.
 
-We also briefly note that we can create an ensemble of models like NNs in an ``additive'' way.  Let $f_1, f_2, \cdots, f_N$ be $N$ different NNs all operating on the same input $x$ and producing one output each.  Note that we fix the number of NNs just as BART fixes the number of trees \cite{chipman2010bart}.  Now let model $\hat{y}_i = \sum_j f_j(x_i)$ so that $\hat{y}_i \approx y_i$.  We use this form rather than averaging so that we can train individual NNs on the residual of the target and the remaining NN contributors, similar to BART \cite{chipman2010bart}.  That is, we will train network $i$ by first fixing all of the other networks in the ensemble.  Then we subtract their fixed contribution to the estimate from the actual target value to produce a residual.  We train the free network on this residual:
+We also briefly note that we can create an ensemble of models like NNs in an ``additive'' way.  Let $f_1, f_2, \cdots, f_N$ be $N$ different NNs all operating on the same input $x$ and producing one output each.  Note that we fix the number of NNs just as BART fixes the number of trees \cite{chipman2010bart}.  Now let model $\hat{y}_i = \sum_j f_j(x_i)$ so that $\hat{y}_i \approx y_i$.  We use this additive form rather than averaging (i.e. $\hat{y}_i = \frac{1}{N} \sum_j f_j(x_i)$, though this only differs by a constant scaling factor) so that we can train individual NNs on the residual of the target and the remaining NN contributors, similar to BART \cite{chipman2010bart}.  That is, we will train network $i$ by first fixing all of the other networks in the ensemble.  Then we subtract their fixed contribution to the estimate from the actual target value to produce a residual.  We train the free network on the residual defined as follows:
 
 $$
 R_{ik} = y_i - \sum_{j\neq k} f_j(x_i)
 $$
 
-To develop our ensemble of NNs, we sample from the space of networks using a Markov Chain.  In a simple MCMC procedure, we would sample from some target distribution, $P(x)$, that is, in general, difficult to sample from directly \cite{haugh2021tutorial}.  To do so, we construct a Markov Chain whose stationary distribution is $P(x)$.  One straightforward way to ensure this is to enforce ``detailed balance'', that is, make sure the probability flux from state $x$ to state $x'$ in our procedure is equal to the probability flux of moving from state $x'$ to $x$, shown in \autoref{fig:balance}.
+To develop our ensemble of NNs, we sample from the space of networks using a Markov Chain.  In a simple MCMC procedure, we would sample from some target distribution, $P(x)$, that is, in general, difficult to sample from directly \cite{haugh2021tutorial}.  To do this sampling, we construct a Markov Chain whose stationary distribution is $P(x)$.  One straightforward way to ensure this is make sure the probability flux from state $x$ to state $x'$ in our procedure is equal to the probability flux of moving from state $x'$ to $x$, shown in \autoref{fig:balance}.  This is known as enforcing ``detailed balance''.
 
 \begin{figure}[htb]
 \centering
     \includegraphics[scale=0.4]{balance.png}
-    \caption{Share of probability from $x$ moving to $x'$ is equal to share from $x'$ moving to $x$ for all pairs of states, ensuring overall distribution is constant.  Figure from \cite{stepanov2021math}.}
+    \caption{Share of probability from $x$ moving to $x'$ is equal to share from $x'$ moving to $x$ for all pairs of states, ensuring overall distribution is constant.  Figure reproduced from \cite{stepanov2021math}.}
     \label{fig:balance}
 \end{figure}
 
-$A(x,x')$ is the acceptance probability of moving to the new state $x'$ from $x$, and $T(x,x')$ is the underlying transition probability of state $x$ changing to state $x'$.  The MCMC procedure starts from some initial $x$ state (say $x=0$ in a simple 1D continuous case), proposes a new state, $x'$, and then accepts it with some probability:
+There are several terms in this detailed balance description in \autoref{fig:balance}.  $A(x,x')$ is the acceptance probability of moving to the new state $x'$ from $x$, and $T(x,x')$ is the underlying transition probability of state $x$ changing to state $x'$.  The MCMC procedure starts from some initial $x$ state (say $x=0$ in a simple 1D continuous case), proposes a new state, $x'$, and then accepts it with some probability:
 
 $$
 A(x,x') = min(1, \frac{T(x|x') P(x')}{T(x'|x) P(x)})
 $$
 
-Intuitively, if we propose a ``more likely'' state ($P(x') \geq P(x)$) and it's at least as likely to transit from $x'$ to $x$ as the other way ($T(x|x') \geq T(x'|x)$), then we will accept the new state with probability 1.  Otherwise, there is only some chance, depending on the exact values, of accepting the new state \cite{stepanov2021math}.  After some number of ``burn-in'' iterations, the distribution of states over time converges to the desired $P(x)$ (though successive states are necessarily correlated).
+Intuitively, if we propose a ``more likely'' state ($P(x') \geq P(x)$) and it's at least as likely to transit from $x'$ to $x$ as the other way ($T(x|x') \geq T(x'|x)$), then we will accept the new state with probability 1.  If either of these conditions fails, there is only some chance (possibly still probability 1), depending on the exact values, of accepting the new state \cite{stepanov2021math}.  Note that if we were reject every less likely state, we would lose detailed balance and no longer have the desired stationary distribution.  After a number of ``burn-in'' iterations, the distribution of states over time converges to the desired $P(x)$.  Note, however, that successive times are necessarily correlated.
 
-In our situation, however, we sample not from a known distribution, but from the distribution of models that accurately predict our target value.  Consider a generic model, $M$ (e.g. a decision tree, a neural network, etc).  Generalizing the bayesian CART procedure \cite{chipman1998bayesian}, we expand the target distribution into two components: 
+For BART and BARN, however, we sample not from a known distribution, but from the distribution of models that accurately predict our target value (i.e. smaller residuals).  Consider a generic model, $M$ (e.g. a decision tree or a neural network).  Generalizing the bayesian CART procedure \cite{chipman1998bayesian}, we expand the target distribution into two components: 
 
 $$
 P(x) = P(Y|X,M) P(M)
 $$
 
-$P(M)$ is some prior on the model itself, independent of the data.  We typically use this to control model size (i.e. encourage smaller models).  $P(Y|X,M)$, on the other hand, represents how well the model predicts the data (target $Y$ with input $X$).  Our transition probabilities, $T(M,M')$ have some specification as well (note that this mostly affects the efficiency and speed of convergence of the procedure).  Our revised conditional acceptance is then:
+where $P(M)$ is some Bayesian prior on the model itself, independent of the data.  We typically use this prior to control model size (e.g. encourage smaller models).  On the other hand, $P(Y|X,M)$ represents how well the model fits the data (target $Y$ with input $X$).  Our transition probabilities (in BARN or BART), $T(M,M')$ have some specification as well (note that this mostly affects the efficiency and speed of convergence of the procedure).  Our revised conditional acceptance is then:
 
 $$
 A(M,M') = min(1, \frac{T(M|M') P(Y|X,M')P(M')}{T(M'|M) P(Y|X,M)P(M)})
 $$
 
-This still only applies to a single model, not an ensemble.  Transitioning $n$ such models at once is cumbersome, requiring an $n^2$ transition dimension \emph{in the space of models, $M$,} and a similarly complicated conditional.  Instead, we apply Gibbs Sampling to iteratively update models based on the residual, exactly as is done in BART \cite{chipman2010bart}.  Practically, this means that when updating model $M_k$, we first compute the residual with the other models, $R_k$.  Then we take one MCMC step with acceptance:
+This acceptance probability still only applies to a single model, not an ensemble as in BART or BARN.  Transitioning $n$ such models at once is cumbersome, requiring an $n^2$ transition dimension \emph{in the space of models, $M$,} and a similarly complicated conditional.  Instead, BARN applies Gibbs Sampling to iteratively update models based on the residual, exactly as is done in BART \cite{chipman2010bart}.  short, this means that when updating model $M_k$, we first compute the residual with the other models, $R_k$.  Then we take one MCMC step with acceptance:
 
 $$
 A(M_k,M_k') = min(1, \frac{T(M_k|M_k') P(R_k|X,M_k')P(M_k')}{T(M_k'|M_k) P(R_k|X,M_k)P(M_k)})
 $$
 
-When we update the $M_{k+1}$ model, we recompute the residual using the possibly new $M_k$.  This allows us to quickly update each model's contribution and maintain the overall MCMC procedure.  As in BART, this converges to an ensemble of models conditioned on their ability to additively predict the target.
+When we update the $M_{k+1}$ model, we recompute the residual using the possibly new $M_k$.  This allows us to quickly update each model's contribution and maintain the overall MCMC procedure.  As in BART, this MCMC prodcedure converges to an ensemble of models conditioned on their ability to additively predict the target.
 
 \section{Methodology}\label{sec:method}
 
