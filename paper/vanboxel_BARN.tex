@@ -131,9 +131,9 @@ When we update the $M_{k+1}$ model, we recompute the residual using the possibly
 
 \section{Methodology}\label{sec:method}
 
-We adapt the BART procedure \cite{chipman2010bart} to an ensemble of small single-hidden layer neural networks instead of decision trees.  That is, we train the ensemble such that $\hat{y}_i = \sum_k M_k(x_i)$, where each $M_k$ is a neural network with some number of neurons and one hidden layer.  In principle the model can be arbitrarily more complicated, but we retain this structure to simplify MCMC calculations.  Due to the similarities with BART, we call our procedure Bayesian Additive Regression Networks (BARN).
+We adapt the BART procedure \cite{chipman2010bart} to an ensemble of small single-hidden layer neural networks instead of decision trees.  That is, we train the ensemble such that $\hat{y}_i = \sum_k M_k(x_i)$, where each $M_k$ is a neural network with some number of neurons and one hidden layer.  In principle the model can be arbitrarily more complicated, but we retain this structure to simplify MCMC calculations and reduce computation time.  Due to the similarities with BART, we call our procedure Bayesian Additive Regression Networks (BARN).
 
-At a high level, we propose architecture changes to a single model, $M_k$, at a time.  This enables us to condition on the fixed models, $M_{j\neq k}$ to effect Gibbs' sampling.  Each MCMC step proposes a modification to $M_k$'s architecture, trains this new model, and computes an acceptance probability, $A$.  For simplicity, we fix the \emph{number} of models in the ensemble, $N$.  The MCMC procedure only modifies existing models in the ensemble.
+At a high level, we propose architectural changes to a single model, $M_k$, at a time.  This single model changes enable us to condition on the fixed models, $M_{j\neq k}$ to effect Gibbs' sampling.  Each MCMC step proposes a modification to $M_k$'s architecture, trains this new model, and computes an acceptance probability, $A$.  For simplicity, we fix the \emph{number} of models in the ensemble as $N$.  The MCMC procedure only modifies existing models in the ensemble.
 
 To do such modifications with detailed balance, we need the three components of the acceptance probability, $A$.  For the transition probability, $T(M'|M)$, we have some flexibility.  While a ``tilted'' distribution would provide faster convergence, it also relies on more knowledge of the target distribution.  As this study is a prototype, we adopt a simple transition rule based on the size (i.e. number of neurons $m'$ and $m$ in the hidden layer of models $M'$ and $M$, respectively) of the models to discourage them from growing large.  Note that we do not consider the weight values themselves in this calculation; doing so would require handling dimensionality changes (i.e. with reversible jump MCMC \cite{green1995reversible}).  And it would require some judgement or heuristic a priori about how the weights should change, \emph{independent of the training process}.  Therefore, we restrict transitions to change by exactly 1 neuron.  In our analysis, we set $p=0.4$ as the growth transition probability.
 
@@ -164,7 +164,11 @@ When transitioning from $M$ to $M'$, we can make use of the already learned weig
 
 \section{Evaluation}\label{sec:eval}
 
-To test the effectiveness of our method, we train ensembles against eight benchmark regression problems and compare to existing techniques.  Seven of these datasets are freely available from the UCI Machine Learning repository \cite{Dua:2019}, and one is a randomly generated linear regression problem with eight relevant and two irrelevant variables.  While these are relatively small in scale, we compare against BART which performed very well on these as shown in \cite{biau2019neural}.  \autoref{tab:datasets} shows the size of each dataset in features and data points.
+We first assess the performance of BARN on using benchmark regression problems that have been previously used in studies examining the performance of newly-developed methods. Next, we focus on on a specific ecological data set as a small case study.
+
+\subsection{Benchmark Results}\label{subsec:res}
+
+To test the effectiveness of BARN, we train ensembles against eight benchmark regression problems and compare its performance to that of existing regression techniques.  Seven of the data sets analyzed in this study are freely available from the UCI Machine Learning repository \cite{Dua:2019}, and the last is a randomly generated linear regression problem with eight relevant and two irrelevant variables.  While these are relatively small in scale, we compare against BART which performed very well on these as shown in \cite{biau2019neural}.  \autoref{tab:datasets} shows the size of each dataset in features and data points.
 
 \begin{table}[htb]
 \centering
@@ -221,6 +225,14 @@ wisconsin &\textbf{33.48} ( 2.497)& 45.15 (10.365)& 35.76 ( 3.208)\\
     \caption{BARN almost always matches or beats other methods, and is more stable}
     \label{fig:results}
 \end{figure}
+
+\subsection{BARN and clumped isotope paleothermometry}\label{subsec:therm}
+
+% TODO
+
+\section{Computational Costs of BARN}\label{sec:cost}
+
+\crp{Add a new section assessing how computationally expensive BARN is...for instance, you could use microbenmark in R for this.  https://cran.r-project.org/web/packages/microbenchmark/index.html}
 
 
 \section{Discussion}\label{sec:dis}
