@@ -7,6 +7,7 @@ import numpy as np
 import scipy.stats
 # use sklearn for now, could upgrade to keras later if we want
 import sklearn.neural_network as sknn
+import sklearn.linear_model
 import sklearn.datasets as skds
 from sklearn.utils import check_random_state as crs
 import sklearn.model_selection as skms
@@ -30,6 +31,7 @@ parser.add_argument('--lr', default=0.1, type=float, help='Learning rate')
 parser.add_argument('--no-warn', default=False, action='store_true')
 parser.add_argument('--bart', default=False, action='store_true')
 parser.add_argument('--big-nn', default=False, action='store_true')
+parser.add_argument('--ols', default=False, action='store_true')
 parser.add_argument('-m','--num_batch', default=20, type=int, help='Number of batches for batch mean analysis')
 
 args = parser.parse_args()
@@ -78,8 +80,9 @@ for run_num in range(args.nrun):
         batch_var = nets.batch_means(num_batch, batch_size, np_out=f'{args.out_prepend}{dname}_val_resid.npy', outfile=f'{args.out_prepend}var_all.csv', burn=burn)
 
         # Setup basic viz
+        fig_phi = nets.phi_viz(f'{args.out_prepend}{dname}_phi.png')
         fig, ax, rmseh2 = nets.viz(f'{args.out_prepend}{dname}_results.png',
-                       extra_slots=args.big_nn+args.bart,
+                       extra_slots=args.big_nn+args.bart+args.ols,
                        close=False)
 
         # This only saves the last iteration of full models, but that's something
@@ -93,13 +96,13 @@ for run_num in range(args.nrun):
             Nb = NN(tot_neurons, lr=0.1)
             Nb.train(Xtr,Ytr)
             Yhb = Nb.model.predict(Xte)
-            r2hb = metrics.r2_score(Yte, Yhb)
+            r2hb = np.abs(metrics.r2_score(Yte, Yhb))
             rmsehb = metrics.mean_squared_error(Yte, Yhb, squared=False)
             out_list.append(str(rmsehb))
-            ax[3].plot([np.min(Yte), np.max(Yte)],[np.min(Yte), np.max(Yte)])
-            ax[3].scatter(Yte,Yhb, c='orange')
-            ax[3].set_title('Equiv Size NN')
-            ax[3].text(0.05, 0.85, f'$R^2 = $ {r2hb:0.4}\n$RMSE = $ {rmsehb:0.4}', transform=ax[3].transAxes)
+            ax[2].plot([np.min(Yte), np.max(Yte)],[np.min(Yte), np.max(Yte)])
+            ax[2].scatter(Yte,Yhb, c='orange')
+            ax[2].set_title('Equiv Size NN')
+            ax[2].text(0.05, 0.85, f'$R^2 = $ {r2hb:0.4}\n$RMSE = $ {rmsehb:0.4}', transform=ax[2].transAxes)
             with open(f'{args.out_prepend}{dname}_BARN_derived.p','wb') as f:
                 pickle.dump(Nb, f)
 
@@ -112,13 +115,28 @@ for run_num in range(args.nrun):
             rmseht = resb[2]
             out_list.append(str(rmseht))
 
-            ax[3+args.big_nn].plot([np.min(Yte), np.max(Yte)],[np.min(Yte), np.max(Yte)])
-            ax[3+args.big_nn].scatter(Yte,Yht, c='orange')
-            ax[3+args.big_nn].set_title('BART')
-            ax[3+args.big_nn].text(0.05, 0.85, f'$R^2 = $ {r2ht:0.4}\n$RMSE = $ {rmseht:0.4}', transform=ax[3+args.big_nn].transAxes)
+            ax[2+args.big_nn].plot([np.min(Yte), np.max(Yte)],[np.min(Yte), np.max(Yte)])
+            ax[2+args.big_nn].scatter(Yte,Yht, c='orange')
+            ax[2+args.big_nn].set_title('BART')
+            ax[2+args.big_nn].text(0.05, 0.85, f'$R^2 = $ {r2ht:0.4}\n$RMSE = $ {rmseht:0.4}', transform=ax[2+args.big_nn].transAxes)
 
             with open(f'{args.out_prepend}{dname}_BART.p','wb') as f:
                 pickle.dump(BB, f)
+
+        if args.ols:
+            ols_model = sklearn.linear_model.LinearRegression()
+            ols_model.fit(Xtr, Ytr)
+            Yho = ols_model.predict(Xte)
+            r2ho = metrics.r2_score(Yte, Yho)
+            rmseho = metrics.mean_squared_error(Yte, Yho, squared=False)
+            out_list.append(str(rmseho))
+            ax[2+args.big_nn+args.bart].plot([np.min(Yte), np.max(Yte)],[np.min(Yte), np.max(Yte)])
+            ax[2+args.big_nn+args.bart].scatter(Yte,Yho, c='orange')
+            ax[2+args.big_nn+args.bart].set_title('OLS')
+            ax[2+args.big_nn+args.bart].text(0.05, 0.85, f'$R^2 = $ {r2ho:0.4}\n$RMSE = $ {rmseho:0.4}', transform=ax[2+args.big_nn+args.bart].transAxes)
+            with open(f'{args.out_prepend}{dname}_OLS.p','wb') as f:
+                pickle.dump(Nb, f)
+
 
         # write the final results
         with open(f'{args.out_prepend}res_all.csv', 'a') as f:

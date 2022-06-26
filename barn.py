@@ -186,36 +186,43 @@ class BARN(object):
     def predict(self, X):
         return np.sum([N.model.predict(X) for N in self.cyberspace], axis=0)
 
+    def phi_viz(self, outname='phi.png', close=True):
+        fig = plt.figure()
+        fig.set_size_inches(4,4)
+        # Plot phi results
+        plt.plot(self.phi)
+        plt.xlabel('MCMC Iteration')
+        plt.ylabel('RMSE')
+        plt.title(f'MCMC Error Progression')
+        fig.savefig(outname)
+        if close:
+            plt.close()
+        return fig
+
     def viz(self, outname='results.png', extra_slots=0, close=True):
-        fig, ax = plt.subplots(1,3+extra_slots, squeeze=True)
+        fig, ax = plt.subplots(1,2+extra_slots, squeeze=True)
         fig.set_size_inches(12+4*extra_slots,4)
         # check initial fit
         r2h = metrics.r2_score(self.Yte, self.Yte_init)
         rmseh = metrics.mean_squared_error(self.Yte, self.Yte_init, squared=False)
 
-        # Plot phi results
-        ax[0].plot(self.phi)
-        ax[0].set_xlabel('MCMC Iteration')
-        ax[0].set_ylabel('RMSE')
-        ax[0].set_title(f'MCMC Error Progression')
-
-        ax[1].plot([np.min(self.Yte), np.max(self.Yte)],
+        ax[0].plot([np.min(self.Yte), np.max(self.Yte)],
                    [np.min(self.Yte), np.max(self.Yte)])
-        ax[1].scatter(self.Yte,self.Yte_init, c='orange') # somewhat decent on synth, gets lousy at edge, which makes sense
-        ax[1].set_title('Initial BARN')
-        ax[1].set_ylabel('Prediction')
-        ax[1].text(0.05, 0.85, f'$R^2 = $ {r2h:0.4}\n$RMSE = $ {rmseh:0.4}', transform=ax[1].transAxes)
+        ax[0].scatter(self.Yte,self.Yte_init, c='orange') # somewhat decent on synth, gets lousy at edge, which makes sense
+        ax[0].set_title('Initial BARN')
+        ax[0].set_ylabel('Prediction')
+        ax[0].text(0.05, 0.85, f'$R^2 = $ {r2h:0.4}\n$RMSE = $ {rmseh:0.4}', transform=ax[0].transAxes)
 
         # final fit
         Yh2 = self.predict(self.Xte)
         r2h2 = metrics.r2_score(self.Yte, Yh2)
         rmseh2 = metrics.mean_squared_error(self.Yte, Yh2, squared=False)
-        ax[2].plot([np.min(self.Yte), np.max(self.Yte)],
+        ax[1].plot([np.min(self.Yte), np.max(self.Yte)],
                    [np.min(self.Yte), np.max(self.Yte)])
-        ax[2].scatter(self.Yte,Yh2, c='orange')
-        ax[2].set_title('Final BARN')
-        ax[2].set_xlabel('Target')
-        ax[2].text(0.05, 0.85, f'$R^2 = $ {r2h2:0.4}\n$RMSE = $ {rmseh2:0.4}', transform=ax[2].transAxes)
+        ax[1].scatter(self.Yte,Yh2, c='orange')
+        ax[1].set_title('Final BARN')
+        ax[1].set_xlabel('Target')
+        ax[1].text(0.05, 0.85, f'$R^2 = $ {r2h2:0.4}\n$RMSE = $ {rmseh2:0.4}', transform=ax[1].transAxes)
 
         fig.savefig(outname)
         if close:
