@@ -199,30 +199,31 @@ class BARN(object):
             plt.close()
         return fig
 
-    def viz(self, outname='results.png', extra_slots=0, close=True):
-        fig, ax = plt.subplots(1,2+extra_slots, squeeze=True)
+    def viz(self, outname='results.png', extra_slots=0, close=True, initial=False):
+        fig, ax = plt.subplots(1,1+extra_slots+initial, squeeze=True, sharex=True,sharey=True)
         fig.set_size_inches(12+4*extra_slots,4)
-        # check initial fit
-        r2h = metrics.r2_score(self.Yte, self.Yte_init)
-        rmseh = metrics.mean_squared_error(self.Yte, self.Yte_init, squared=False)
+        if initial:
+            # check initial fit
+            r2h = metrics.r2_score(self.Yte, self.Yte_init)
+            rmseh = metrics.mean_squared_error(self.Yte, self.Yte_init, squared=False)
 
-        ax[0].plot([np.min(self.Yte), np.max(self.Yte)],
-                   [np.min(self.Yte), np.max(self.Yte)])
-        ax[0].scatter(self.Yte,self.Yte_init, c='orange') # somewhat decent on synth, gets lousy at edge, which makes sense
-        ax[0].set_title('Initial BARN')
-        ax[0].set_ylabel('Prediction')
-        ax[0].text(0.05, 0.85, f'$R^2 = $ {r2h:0.4}\n$RMSE = $ {rmseh:0.4}', transform=ax[0].transAxes)
+            ax[0].plot([np.min(self.Yte), np.max(self.Yte)],
+                       [np.min(self.Yte), np.max(self.Yte)])
+            ax[0].scatter(self.Yte,self.Yte_init, c='orange') # somewhat decent on synth, gets lousy at edge, which makes sense
+            ax[0].set_title('Initial BARN')
+            ax[0].set_ylabel('Prediction')
+            ax[0].text(0.05, 0.85, f'$R^2 = $ {r2h:0.4}\n$RMSE = $ {rmseh:0.4}', transform=ax[0].transAxes)
 
         # final fit
         Yh2 = self.predict(self.Xte)
         r2h2 = metrics.r2_score(self.Yte, Yh2)
         rmseh2 = metrics.mean_squared_error(self.Yte, Yh2, squared=False)
-        ax[1].plot([np.min(self.Yte), np.max(self.Yte)],
+        ax[0+initial].plot([np.min(self.Yte), np.max(self.Yte)],
                    [np.min(self.Yte), np.max(self.Yte)])
-        ax[1].scatter(self.Yte,Yh2, c='orange')
-        ax[1].set_title('Final BARN')
-        ax[1].set_xlabel('Target')
-        ax[1].text(0.05, 0.85, f'$R^2 = $ {r2h2:0.4}\n$RMSE = $ {rmseh2:0.4}', transform=ax[1].transAxes)
+        ax[0+initial].scatter(self.Yte,Yh2, c='orange')
+        ax[0+initial].set_title('Final BARN')
+        ax[0+initial].set_xlabel('Target')
+        ax[0+initial].text(0.05, 0.85, f'$R^2 = $ {r2h2:0.4}\n$RMSE = $ {rmseh2:0.4}', transform=ax[0+initial].transAxes)
 
         fig.savefig(outname)
         if close:

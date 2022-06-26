@@ -31,6 +31,16 @@ def load_data(dataset_name:str, seed=42):
         import sklearn.datasets as skds
         X, Y = skds.load_diabetes(return_X_y=True)
         Y = Y.reshape((-1,1))
+    elif dataset_name == "isotope":
+        import preprocessing.preprocess_isotope as isotope
+        # load the actual training/testing
+        X,Xte, Y, Yte = isotope.load_data()
+        # temporarily split training to get a validation set
+        X1, X2, X3, Y1, Y2, Y3 = split_data(X,Y, seed) 
+        # reconstruct training set
+        Xtr = np.concatenate([X1,X3])
+        Ytr = np.concatenate([Y1,Y3])
+        return Xtr, X2, Xte, Ytr, Y2, Yte
     else:
         raise NameError("Dataset name not recognised: " + dataset_name)
     return split_data(X,Y,seed)

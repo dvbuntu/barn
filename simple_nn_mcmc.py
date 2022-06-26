@@ -81,9 +81,11 @@ for run_num in range(args.nrun):
 
         # Setup basic viz
         fig_phi = nets.phi_viz(f'{args.out_prepend}{dname}_phi.png')
+        initial=False
         fig, ax, rmseh2 = nets.viz(f'{args.out_prepend}{dname}_results.png',
                        extra_slots=args.big_nn+args.bart+args.ols,
-                       close=False)
+                       close=False,
+                       initial=initial)
 
         # This only saves the last iteration of full models, but that's something
         nets.save(f'{args.out_prepend}{dname}_BARN_ensemble.p')
@@ -99,10 +101,10 @@ for run_num in range(args.nrun):
             r2hb = np.abs(metrics.r2_score(Yte, Yhb))
             rmsehb = metrics.mean_squared_error(Yte, Yhb, squared=False)
             out_list.append(str(rmsehb))
-            ax[2].plot([np.min(Yte), np.max(Yte)],[np.min(Yte), np.max(Yte)])
-            ax[2].scatter(Yte,Yhb, c='orange')
-            ax[2].set_title('Equiv Size NN')
-            ax[2].text(0.05, 0.85, f'$R^2 = $ {r2hb:0.4}\n$RMSE = $ {rmsehb:0.4}', transform=ax[2].transAxes)
+            ax[1+initial].plot([np.min(Yte), np.max(Yte)],[np.min(Yte), np.max(Yte)])
+            ax[1+initial].scatter(Yte,Yhb, c='orange')
+            ax[1+initial].set_title('Equiv Size NN')
+            ax[1+initial].text(0.05, 0.85, f'$R^2 = $ {r2hb:0.4}\n$RMSE = $ {rmsehb:0.4}', transform=ax[1+initial].transAxes)
             with open(f'{args.out_prepend}{dname}_BARN_derived.p','wb') as f:
                 pickle.dump(Nb, f)
 
@@ -115,10 +117,10 @@ for run_num in range(args.nrun):
             rmseht = resb[2]
             out_list.append(str(rmseht))
 
-            ax[2+args.big_nn].plot([np.min(Yte), np.max(Yte)],[np.min(Yte), np.max(Yte)])
-            ax[2+args.big_nn].scatter(Yte,Yht, c='orange')
-            ax[2+args.big_nn].set_title('BART')
-            ax[2+args.big_nn].text(0.05, 0.85, f'$R^2 = $ {r2ht:0.4}\n$RMSE = $ {rmseht:0.4}', transform=ax[2+args.big_nn].transAxes)
+            ax[1+initial+args.big_nn].plot([np.min(Yte), np.max(Yte)],[np.min(Yte), np.max(Yte)])
+            ax[1+initial+args.big_nn].scatter(Yte,Yht, c='orange')
+            ax[1+initial+args.big_nn].set_title('BART')
+            ax[1+initial+args.big_nn].text(0.05, 0.85, f'$R^2 = $ {r2ht:0.4}\n$RMSE = $ {rmseht:0.4}', transform=ax[1+args.big_nn].transAxes)
 
             with open(f'{args.out_prepend}{dname}_BART.p','wb') as f:
                 pickle.dump(BB, f)
@@ -130,10 +132,10 @@ for run_num in range(args.nrun):
             r2ho = metrics.r2_score(Yte, Yho)
             rmseho = metrics.mean_squared_error(Yte, Yho, squared=False)
             out_list.append(str(rmseho))
-            ax[2+args.big_nn+args.bart].plot([np.min(Yte), np.max(Yte)],[np.min(Yte), np.max(Yte)])
-            ax[2+args.big_nn+args.bart].scatter(Yte,Yho, c='orange')
-            ax[2+args.big_nn+args.bart].set_title('OLS')
-            ax[2+args.big_nn+args.bart].text(0.05, 0.85, f'$R^2 = $ {r2ho:0.4}\n$RMSE = $ {rmseho:0.4}', transform=ax[2+args.big_nn+args.bart].transAxes)
+            ax[1+initial+args.big_nn+args.bart].plot([np.min(Yte), np.max(Yte)],[np.min(Yte), np.max(Yte)])
+            ax[1+initial+args.big_nn+args.bart].scatter(Yte,Yho, c='orange')
+            ax[1+initial+args.big_nn+args.bart].set_title('OLS')
+            ax[1+initial+args.big_nn+args.bart].text(0.05, 0.85, f'$R^2 = $ {r2ho:0.4}\n$RMSE = $ {rmseho:0.4}', transform=ax[1+initial+args.big_nn+args.bart].transAxes)
             with open(f'{args.out_prepend}{dname}_OLS.p','wb') as f:
                 pickle.dump(Nb, f)
 
