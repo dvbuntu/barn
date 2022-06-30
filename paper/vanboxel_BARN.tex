@@ -12,7 +12,7 @@
 
 \title{Bayesian Additive Regression Networks}
 
-\author{Dan Van Boxel}
+\author{Daniel Van Boxel}
 \date{\today}
 
 \usepackage{xcolor}
@@ -30,13 +30,9 @@
 
 \section{Introduction}\label{sec:intro}
 
-\crp{Clarify BARN $\ne$ Neural Decision Trees \cite{balestriero2017neural}}
-
-\crp{Maybe this is not entirely necessary but some folks might find useful to directly see that this is a supervised technique. Similarly, it'd be important to explicitly indicate that BARN is limited to regressions despite NNs being also capable of behaving as classifiers...}
-
 Training a cooperative set of weak models (i.e. an ensemble of small models) rather than a single large model has proven itself an effective machine learning technique \cite{dietterich2000ensemble,hansen1990neural,seni2010ensemble,lee2020comparing}.  While Random Forests (RF) \cite{ho1995random,breiman2001random} are one of the most well-known ensemble methods, multiple other approaches have been proposed over the years, \cite[provide some reviews]{way2012advances,dong2020survey}.  One tree-based technique that has outperformed more recent models \cite{biau2019neural} is Bayesian Additive Regression Trees (BART) \cite{chipman2010bart}.  At the same time, neural networks (NNs) have become extremely accurate on a wide variety of tasks \dvb{cite an NN survey here}, attracting attention from more traditional machine learning methods.
 
-Seeking even better methods, some researchers have attempted to combine tree-based and NN-based approaches.  For instance, Neural Random Forests \cite{biau2019neural}, builds NNs that are numerically equivalent to RFs, and then continues to train them as though they were newly initialized networks.  Recent research \cite{vanboxel2021neural}, however, suggests creating neural networks this way may not significantly improve performance over both similarly parametrized RFs and NNs.
+Seeking even better methods, some researchers have attempted to combine tree-based and NN-based approaches.  For instance, Neural Random Forests \cite{biau2019neural}, builds NNs that are numerically equivalent to RFs, and then continues to train them as though they were newly initialized networks.  Recent research \cite{vanboxel2021neural}, however, suggests creating neural networks this way may not significantly improve performance over both similarly parametrized RFs and NNs.  Another attempted hybridization is Neural Decision Trees \cite{balestriero2017neural}, which replaces the splitting function in trees with neural networks.
 
 Rather than copy an existing ensembling approach exactly into neural networks \cite[for example]{biau2019neural}, we instead adapt the conditional Monte Carlo Markov Chain (MCMC) learning process of BART \cite{chipman2010bart} to an ensemble of neural network architectures.  That is, we train a series of NNs, each one on the residual of the target value and the summed prediction of the remaining NNs.  We further condition acceptance of a model following the Bayes CART method \cite{chipman1998bayesian}.  This sampling procedure of Bayesian Additive Regression Networks (BARN) generalizes the BART method to a new model type.  We describe this in more detail in \autoref{sec:method}.
 
@@ -44,13 +40,13 @@ To evaluate the effectiveness of this approach, we apply BARN to a variety of be
 
 \section{Related Work}\label{sec:related}
 
-\crp{include Bayesian in subtitle and explain more clearly}
-
 \emph{MCMC:} Before discussing machine learning techniques, we briefly describe some key works in MCMC that allow us to intelligently sample from the space of \emph{models} (which may or may not include learned model parameters).  Metropolis et al \cite{metropolis1953equation} developed one of the earliest MCMC algorithms to sample from a target distribution, enabling sampling without direct simulation.  Hastings \cite{hastings1970monte}, however, provided a key extension (hence why this process is sometimes called the ``Metropolis-Hastings'', or M-H, algorithm) to allow transition probabilities to vary in direction (i.e. the probability of transiting from the initial state to the proposed state need not be equal to the probability of transiting from the proposed state to the initial state).  Though a special case of M-H, Gibbs Sampling \cite{geman1984stochastic} demonstrated a way to iteratively update components of a model.  More recently, Green \cite{green1995reversible} introduced Reversible-Jump MCMC to handle situations when the dimension size of the state space may change (i.e. when transiting the space of models rather than continuous values).  Finally, Hastie and Tibshirani \cite{hastie2000bayesian} synthesized these into a method for fitting a statistical \emph{model}, applying sampling techniques beyond the data itself.
 
 \emph{BART:} One such statistical model is BART, part of a long line of machine learning methods focused on decision trees.   A decision tree is a formalization of the principle of following a sequence of queries to a single result that has long existed in fields like phylogenetics (often called, ``dichotomous keys'') for classifying species \cite{pankhurst1991practical}.  In machine learning, however, researchers have developed methods to build optimal trees for both classification (e.g. ``Commute by bus, car, or train?'') and regression \cite{breiman1984classification} (e.g. ``What's the fuel efficiency of a car?'').  In particular, Bayesian Classification And Regression Trees (CART) \cite{chipman1998bayesian} uses Markov Chain Monte Carlo to sample from the \emph{space of trees}, conditioned on how well the proposed tree models the data (See \autoref{sec:background} for additional details).  BART \cite{chipman2010bart} then extends the CART procedure to a sum-of-models ensemble (i.e. the ``additive'' part of BART) by using Gibbs Sampling, providing state-of-the-art regression modeling using simple decision trees. 
 
-\emph{NN:} Another arguably state-of-the-art approach in machine learning is neural networks (NNs).  In recent decades, NNs have come to prominence for their accuracy and ease-of-use \crp{provide citation}.  Starting from the Perceptron \cite{rosenblatt1958perceptron}, neural networks are now routine in computer vision \cite{tan2019efficientnet}, regression, and classification.  Often, the challenge in training an NN (beyond managing large volumes of data) is determining the network architecture itself.  Idrissi et al \cite{idrissi2016genetic} proposed a genetic algorithm for search, though this can be computationally expensive.  Zoph and Le \cite{zoph2016neural} as well as Liu et al \cite{liu2018progressive} investigated iterative approaches to build up a network.  Coming from the other direction of pruning, Lecun et al \cite{lecun1989optimal} was an early work at minimizing the set of required connections.  Architecture search is still often regarded as an art-form more than an optimization.
+\emph{NN:} Another arguably state-of-the-art approach in machine learning is neural networks (NNs).  In recent decades, NNs have come to prominence for their accuracy and ease-of-use \cite{schmidhuber2015deep}.  Starting from the Perceptron \cite{rosenblatt1958perceptron}, neural networks are now routine in computer vision \cite{tan2019efficientnet}, regression, and classification.  Often, the challenge in training an NN (beyond managing large volumes of data) is determining the network architecture itself.  Idrissi et al \cite{idrissi2016genetic} proposed a genetic algorithm for search, though this can be computationally expensive.  Zoph and Le \cite{zoph2016neural} as well as Liu et al \cite{liu2018progressive} investigated iterative approaches to build up a network.  Coming from the other direction of pruning, Lecun et al \cite{lecun1989optimal} was an early work at minimizing the set of required connections.  Architecture search is still often regarded as an art-form more than an optimization.
+
+\emph{Bayesian Modeling}: Taking a Bayesian approach to modeling means putting prior distribution on model parameters.  These priors usually derive from earlier studies, physical models, or system constraints.  Sometimes the priors are internal to the study, as in one traffic safety model \cite{schneider2009bayesian}, while others use priors from previous work \cite{roman2022bayclump}.  Regardless, these affect final estimated parameter results through the classic Bayes' formula \cite{johnson2022bayes}.
 
 \emph{Ensemble Models:} Though neural networks and other solitary large models can be effective, some studies have shown greater capability in an \emph{ensemble} of smaller (i.e. individually less accurate) models \cite{hastie2009elements}.  Random Forests \cite{breiman1996bagging} are a direct approach to this, essentially averaging the result of many small decision trees.  Biau et al \cite{biau2019neural} devised Neural Random Forests to create a (single) neural network from such a forest, with mixed results.  Though a sum-of-models, BART itself is a forest (i.e. ensemble) of decision trees \cite{chipman2010bart}.  To ensemble NNs instead, Opitz and Shavlik \cite{opitz1996actively} used a genetic algorithm to find diverse candidates.  But this doesn't take advantage of conditional statistics demonstrated in BART, which we adapt.
 
@@ -230,9 +226,35 @@ wisconsin &\textbf{33.48} ( 2.497)& 45.15 (10.365)& 35.76 ( 3.208)\\
 
 % TODO
 
-\section{Computational Costs of BARN}\label{sec:cost}
+\subsection{Computational Costs of BARN}\label{subsec:cost}
 
 \crp{Add a new section assessing how computationally expensive BARN is...for instance, you could use microbenmark in R for this.  https://cran.r-project.org/web/packages/microbenchmark/index.html}
+
+While the previous subsections described BARN's performance in terms of error, we also consider the computational cost of running it.  An algorithm which is somewhat less accurate but much cheaper to compute still has value, especially on large data sets.  Conversely, an algorithm which provides robust results but takes significantly longer may still have applications where such stability concerns are prominent.
+
+\autoref{tab:times} shows the mean (and standard deviation) of computation times for our various methods on the benchmark problems.  Note that we are using scikit-learn \cite{scikit-learn} with Python to perform the NN, BARN, and OLS computations (whereas BART is called from R).  Especially for neural networks, there are faster implementations available such as TensorFlow \cite{tensorflow2015whitepaper} or PyTorch \cite{paszke2019pytorch}.   Therefore we consider these measurements as preliminary.  
+
+Based on the current implementation, we see that BARN is significantly slower than all of the other methods tested.  Note, however, that the equivalently sized neural network is not nearly as slow.  Part of this is that BARN has to train networks many times (i.e. the burn in period plus the sampling period, several hundred iterations in this study).  But part of this cost is also constantly loading/unloading BARN's NNs into memory (as stored by scikit-learn).
+
+These observations suggest two possible speedups.  First, an implementation in TensorFlow could take advantage of Graphical Processing Units (GPUs), enabling a high level of parallelism for the NN training process.  This parallelism can provide an immediate 5x improvement or better in computation time \cite{lind2019performance}.  Next, the memory loading/unloading operations could be minimized by storing the many small NNs of BARN as one large NN.  That is, keep the overall neuron count, but zero out weights that represent ``cross-NN'' connections.  Further, when training, one can mask off only the relevant components for updating during backpropagation.  This does require some careful programming, as it requires reloading the model with additional available neurons should all of them be in use yet the MCMC process proposes adding a new one to a model.  But this would bypass most of the loading time, further decreasing the overall computation time.
+
+\begin{table}[htb]
+\centering
+\caption{Mean computation time (and standard deviation) over 13 runs of various methods on different datasets.  Smallest mean time in bold. \dvb{TODO}}
+\begin{tabular}{lrrr}
+Dataset   &     BARN &    Big NN &      BART \\ \hline
+boston    & 4.64 ( 0.447)&  8.11 ( 4.958)&  \textbf{4.10} ( 0.556)\\
+concrete  & 7.32 ( 0.537)& 12.68 ( 7.990)&  \textbf{6.82} ( 0.436)\\
+crimes    & \textbf{0.14} ( 0.009)&  0.18 ( 0.041)&  0.15 ( 0.008)\\
+diabetes  &54.07 ( 2.539)& \textbf{53.74} ( 2.564)& 58.72 ( 2.878)\\
+fires     &\textbf{58.25} (38.845)& 58.35 (39.316)& 77.17 (30.878)\\
+mpg       & \textbf{3.43} ( 0.399)& 71.88 (52.497)&  3.44 ( 0.450)\\
+random    &\textbf{11.46} ( 0.552)& 11.78 ( 0.639)& 55.41 (14.865)\\
+wisconsin &\textbf{33.48} ( 2.497)& 45.15 (10.365)& 35.76 ( 3.208)\\
+\end{tabular}
+    \label{tab:results}
+\end{table}
+
 
 
 \section{Discussion}\label{sec:dis}
