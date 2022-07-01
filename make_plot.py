@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 #plt.ion()
 import pandas as pd
 
-dfile = 'out/res_all.csv'
+dfile = 'results/res_all.csv'
 
 df = pd.read_csv(dfile)
 

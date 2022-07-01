@@ -14,6 +14,8 @@ import sklearn.model_selection as skms
 import sklearn.metrics as metrics
 import argparse
 import pickle
+import time
+import os
 from dataloader import load_data
 from barn import *
 
@@ -52,6 +54,21 @@ BIG = 2**32-1
 if len(args.datasets) == 0:
     args.datasets = ['random']
 
+# if new results files, prepend header
+models = ['BARN']
+if args.big_nn:
+    models.append('Big NN')
+if args.bart:
+    models.append('BART')
+if args.ols:
+    models.append('OLS')
+if not os.path.isfile(f'{args.out_prepend}res_all.csv'):
+    with open(f'{args.out_prepend}res_all.csv', 'a') as f:
+        print(', '.join(['Dataset'] + models), file=f)
+if not os.path.isfile(f'{args.out_prepend}time_all.csv'):
+    with open(f'{args.out_prepend}time_all.csv', 'a') as f:
+        print(', '.join(['Dataset'] + models), file=f)
+
 for run_num in range(args.nrun):
     for dname in args.datasets:
         print(dname)
@@ -72,9 +89,11 @@ for run_num in range(args.nrun):
             Yte = Yte.reshape(-1)
 
         # Fill the BARN with some hay
+        cur_time = time.time()
         nets = BARN(num_nets, dname=dname)
         nets.setup_nets(l=l, lr=lr)
         nets.train(Xtr, Ytr, Xva, Yva, Xte, Yte, total)
+        time_list = [dname, str(time.time()-cur_time)]
 
         # check batch means variance
         batch_var = nets.batch_means(num_batch, batch_size, np_out=f'{args.out_prepend}{dname}_val_resid.npy', outfile=f'{args.out_prepend}var_all.csv', burn=burn)
@@ -95,11 +114,14 @@ for run_num in range(args.nrun):
         if args.big_nn:
             # compare to big NN
             tot_neurons = sum([N.num_nodes for N in nets.cyberspace])
+            cur_time = time.time()
             Nb = NN(tot_neurons, lr=0.1)
             Nb.train(Xtr,Ytr)
+            time_list.append(str(time.time()-cur_time))
             Yhb = Nb.model.predict(Xte)
             r2hb = np.abs(metrics.r2_score(Yte, Yhb))
             rmsehb = metrics.mean_squared_error(Yte, Yhb, squared=False)
+            nn_time = time.time()
             out_list.append(str(rmsehb))
             ax[1+initial].plot([np.min(Yte), np.max(Yte)],[np.min(Yte), np.max(Yte)])
             ax[1+initial].scatter(Yte,Yhb, c='orange')
@@ -111,7 +133,9 @@ for run_num in range(args.nrun):
 
         if args.bart:
             from bart import fit_bart
+            cur_time = time.time()
             BB, resb = fit_bart([Xtr, Xva, Xte, Ytr, Yva, Yte], ntrees=num_nets)
+            time_list.append(str(time.time()-cur_time))
             Yht = BB.predict(Xte)
             r2ht = metrics.r2_score(Yte, Yht)
             rmseht = resb[2]
@@ -126,8 +150,10 @@ for run_num in range(args.nrun):
                 pickle.dump(BB, f)
 
         if args.ols:
+            cur_time = time.time()
             ols_model = sklearn.linear_model.LinearRegression()
             ols_model.fit(Xtr, Ytr)
+            time_list.append(str(time.time()-cur_time))
             Yho = ols_model.predict(Xte)
             r2ho = metrics.r2_score(Yte, Yho)
             rmseho = metrics.mean_squared_error(Yte, Yho, squared=False)
@@ -143,6 +169,9 @@ for run_num in range(args.nrun):
         # write the final results
         with open(f'{args.out_prepend}res_all.csv', 'a') as f:
             print(', '.join(out_list), file=f)
+
+        with open(f'{args.out_prepend}time_all.csv', 'a') as f:
+            print(', '.join(time_list), file=f)
 
         fig.savefig(f'{args.out_prepend}{dname}_results.png')
         plt.close()
