@@ -174,6 +174,7 @@ concrete & 9 & 1030\\
 crimes & 101 & 1994\\
 diabetes & 10 & 442 \\
 fires & 10 & 517\\
+isotope & 1 & 700 \\
 mpg & 7 & 398\\
 random & 10 & 1000 \\
 wisconsin & 32 & 194\\
@@ -239,14 +240,14 @@ While the previous subsections described BARN's performance in terms of error, w
 \caption{Average training time (and standard deviation) over 13 runs of various methods on different datasets.  Note that OLS is the fastest across all dataset.}
 \begin{tabular}{lrrrr}
 Dataset   &     BARN &    Big NN &      BART & OLS\\ \hline
-boston     & 74.20 (7.25)  & 0.10(0.05)&  0.19 (0.03)  & $<$0.01 ($<$0.01) \\
-concrete  & 131.89 (12.90)  & 0.11(0.06)&  0.46(0.02)  & $<$0.01 ($<$0.01) \\
-crimes     & 67.58 (7.17)  & 0.11 (0.07)&  0.81(0.06)  & 0.01 ($<$0.01) \\
-diabetes  & 101.47(6.13)  & 0.08(0.02) 6&  0.15 (0.03)  & 0.01(0.04) \\
+boston     & 74.20 (7.25)  & 0.10 (0.05)&  0.19 (0.03)  & $<$0.01 ($<$0.01) \\
+concrete  & 131.89 (12.90)  & 0.11 (0.06)&  0.46 (0.02)  & $<$0.01 ($<$0.01) \\
+crimes     & 67.58 (7.17)  & 0.11 (0.07)&  0.81 (0.06)  & 0.01 ($<$0.01) \\
+diabetes  & 101.47 (6.13)  & 0.08 (0.02) 6&  0.15 (0.03)  & 0.01 (0.04) \\
 fires      & 57.29 (10.08)  & 0.04 (0.03)&  0.14 (0.02)  & $<$0.01 ($<$0.01) \\
-isotope    & 63.44(16.40)  & 0.06(0.01)&  0.29 (0.04)  & $<$0.01 ($<$0.01) \\
-mpg        & 30.25(2.82)  & 0.02(0.02)&  0.14 (0.01)  & $<$0.01 ($<$0.01) \\
-random    & 181.52(16.60)  & 0.19(0.01)&  0.49(0.02)  & $<$0.01 ($<$0.01) \\
+isotope    & 63.44 (16.40)  & 0.06 (0.01)&  0.29 (0.04)  & $<$0.01 ($<$0.01) \\
+mpg        & 30.25 (2.82)  & 0.02 (0.02)&  0.14 (0.01)  & $<$0.01 ($<$0.01) \\
+random    & 181.52 (16.60)  & 0.19 (0.01)&  0.49 (0.02)  & $<$0.01 ($<$0.01) \\
 wisconsin  & 38.43 (3.14)  & 0.04 (0.03)&  0.09 ($<$0.01)  & $<$0.01 ($<$0.01) \\
 \end{tabular}
     \label{tab:times}
@@ -256,24 +257,6 @@ wisconsin  & 38.43 (3.14)  & 0.04 (0.03)&  0.09 ($<$0.01)  & $<$0.01 ($<$0.01) \
 Based on the current implementation, we see that BARN is significantly slower than all of the other methods tested.  Note, however, that the equivalently sized neural network is not nearly as slow (about 1000x faster than BARN).  Part of this is that BARN has to train networks many times (i.e. the burn in period plus the sampling period, 200 iterations in this study).  But part of this cost is also constantly loading/unloading BARN's NNs into memory (as stored by scikit-learn).
 
 These observations suggest two possible speedups.  First, an implementation in TensorFlow could take advantage of Graphical Processing Units (GPUs), enabling a high level of parallelism for the NN training process.  This parallelism can provide an immediate 5x improvement or better in computation time \cite{lind2019performance}.  Next, the memory loading/unloading operations could be minimized by storing the many small NNs of BARN as one large NN.  That is, keep the overall neuron count, but zero out weights that represent ``cross-NN'' connections.  Further, when training, one can mask off only the relevant components for updating during backpropagation.  This does require some careful programming, as it requires reloading the model with additional available neurons should all of them be in use yet the MCMC process proposes adding a new one to a model.  But this would bypass most of the loading time, further decreasing the overall computation time.
-
-\begin{table}[htb]
-\centering
-\caption{Mean computation time (and standard deviation) over 13 runs of various methods on different datasets.  Smallest mean time in bold. \dvb{TODO}}
-\begin{tabular}{lrrr}
-Dataset   &     BARN &    Big NN &      BART \\ \hline
-boston    & 4.64 ( 0.447)&  8.11 ( 4.958)&  \textbf{4.10} ( 0.556)\\
-concrete  & 7.32 ( 0.537)& 12.68 ( 7.990)&  \textbf{6.82} ( 0.436)\\
-crimes    & \textbf{0.14} ( 0.009)&  0.18 ( 0.041)&  0.15 ( 0.008)\\
-diabetes  &54.07 ( 2.539)& \textbf{53.74} ( 2.564)& 58.72 ( 2.878)\\
-fires     &\textbf{58.25} (38.845)& 58.35 (39.316)& 77.17 (30.878)\\
-mpg       & \textbf{3.43} ( 0.399)& 71.88 (52.497)&  3.44 ( 0.450)\\
-random    &\textbf{11.46} ( 0.552)& 11.78 ( 0.639)& 55.41 (14.865)\\
-wisconsin &\textbf{33.48} ( 2.497)& 45.15 (10.365)& 35.76 ( 3.208)\\
-\end{tabular}
-    \label{tab:results}
-\end{table}
-
 
 
 \section{Discussion}\label{sec:dis}
