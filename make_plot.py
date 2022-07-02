@@ -22,7 +22,7 @@ g = sns.catplot(x="Model", y="RMSE",
                 data=df2, kind="violin",
                 height=6, aspect=.7,
                 sharey=False, legend_out=False,
-                col_wrap=4,
+                col_wrap=5,
                 split=True, inner='stick')
 #g.set_xticklabels(rotation=20)
 plt.tight_layout(w_pad=1)
@@ -34,7 +34,7 @@ g = sns.catplot(x="Model", y="RMSE",
                 data=df2, kind="bar",
                 height=6, aspect=.7,
                 sharey=False, legend_out=False,
-                col_wrap=4
+                col_wrap=5
                )
 #g.set_xticklabels(rotation=20)
 plt.tight_layout(w_pad=1)
@@ -43,4 +43,5 @@ plt.savefig('pres_results.png')
 # print table
 M = df.groupby('Dataset').mean()
 S = df.groupby('Dataset').std()
-print(M,S)
+print(M)
+print(S)
