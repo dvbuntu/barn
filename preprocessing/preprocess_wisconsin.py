@@ -1,9 +1,16 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 import warnings
+import os
 
 def load_data():
     filename = "datasets/data/wisconsin/wpbc.data.txt"
+    if not os.path.isfile(filename):
+        import urllib.request
+        dirname = os.path.dirname(filename)
+        os.makedirs(dirname, exist_ok=True)
+        urllib.request.urlretrieve("https://archive.ics.uci.edu/ml/machine-learning-databases/breast-cancer-wisconsin/wpbc.data", filename)
+
     with open(filename, 'r') as f:
         rawtext = f.read()
 

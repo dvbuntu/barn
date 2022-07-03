@@ -1,9 +1,16 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 import xlrd
+import os
 
 def load_data():
     filename = "./datasets/data/concrete/Concrete_Data.xls"
+    if not os.path.isfile(filename):
+        import urllib.request
+        dirname = os.path.dirname(filename)
+        os.makedirs(dirname, exist_ok=True)
+        urllib.request.urlretrieve("https://github.com/tirthajyoti/Machine-Learning-with-Python/blob/master/Datasets/Concrete_Data.xls?raw=true", filename)
+
     book = xlrd.open_workbook(filename)
 
     # get the first worksheet

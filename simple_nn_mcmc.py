@@ -62,6 +62,10 @@ if args.bart:
     models.append('BART')
 if args.ols:
     models.append('OLS')
+
+dirname = os.path.dirname(args.out_prepend)
+os.makedirs(dirname, exist_ok=True)
+
 if not os.path.isfile(f'{args.out_prepend}res_all.csv'):
     with open(f'{args.out_prepend}res_all.csv', 'a') as f:
         print(', '.join(['Dataset'] + models), file=f)

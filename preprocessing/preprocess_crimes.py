@@ -1,8 +1,15 @@
 # -*- coding: utf-8 -*-
 import numpy as np
+import os
 
 def load_data():
     filename = "./datasets/data/crimes/communities.data.txt"
+    if not os.path.isfile(filename):
+        import urllib.request
+        dirname = os.path.dirname(filename)
+        os.makedirs(dirname, exist_ok=True)
+        urllib.request.urlretrieve("https://archive.ics.uci.edu/ml/machine-learning-databases/communities/communities.data", filename)
+
     with open(filename, 'r') as f:
         lines = [x.rstrip() for x in f.readlines()]
 
