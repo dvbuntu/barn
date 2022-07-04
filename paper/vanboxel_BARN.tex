@@ -24,19 +24,18 @@
 
 \begin{abstract}
 
-    We apply Bayesian Additive Regression Tree (BART) principles to training an ensemble of small neural networks for regression tasks.  Using Markov Chain Monte Carlo, Bayesian Additive Regression Trees (BARN) samples from the space of single hidden layer neural networks that are conditioned on their fit to data.  To create an ensemble of these, we apply Gibbs' sampling to update each network against the residual target value (i.e. subtracting the effect of the other networks).  We examine the effectiveness of BARN on several benchmark regression tasks, comparing it to equivalent neuron count single neural networks as well as equivalent tree count BART.  Our Bayesian Additive Regression Networks (BARN) provide more consistent and often more accurate results, at the cost of significantly greater computation time. \crp{Potentially add some details on model performance or when is best to use BARN or future perspectives.}
-
+    We apply Bayesian Additive Regression Tree (BART) principles to training an ensemble of small neural networks for regression tasks.  Using Markov Chain Monte Carlo, Bayesian Additive Regression Trees (BARN) samples from the space of single hidden layer neural networks that are conditioned on their fit to data.  To create an ensemble of these, we apply Gibbs' sampling to update each network against the residual target value (i.e. subtracting the effect of the other networks).  We examine the effectiveness of BARN on several benchmark regression tasks, comparing it to equivalent neuron count single neural networks as well as equivalent tree count BART.  We also apply BARN to a more recent modeling problem and compare with state of the art.  Our Bayesian Additive Regression Networks (BARN) provide more consistent and often more accurate results, at the cost of significantly greater computation time.  BARN seems to perform best on problems with modest data and significant nonlinearity, though this needs further study.
 \end{abstract}
 
 \section{Introduction}\label{sec:intro}
 
-Training a cooperative set of weak models (i.e. an ensemble of small models) rather than a single large model has proven itself an effective machine learning technique \cite{dietterich2000ensemble,hansen1990neural,seni2010ensemble,lee2020comparing}.  While Random Forests (RF) \cite{ho1995random,breiman2001random} are one of the most well-known ensemble methods, multiple other approaches have been proposed over the years, \cite[provide some reviews]{way2012advances,dong2020survey}.  One tree-based technique that has outperformed more recent models \cite{biau2019neural} is Bayesian Additive Regression Trees (BART) \cite{chipman2010bart}.  At the same time, neural networks (NNs) have become extremely accurate on a wide variety of tasks \dvb{cite an NN survey here}, attracting attention from more traditional machine learning methods.
+Training a cooperative set of weak models (i.e. an ensemble of small models) rather than a single large model has proven itself an effective machine learning technique \cite{dietterich2000ensemble,hansen1990neural,seni2010ensemble,lee2020comparing}.  While Random Forests (RF) \cite{ho1995random,breiman2001random} are one of the most well-known ensemble methods, multiple other approaches have been proposed over the years, \cite[provide some reviews]{way2012advances,dong2020survey}.  One tree-based technique that has outperformed more recent models \cite{biau2019neural} is Bayesian Additive Regression Trees (BART) \cite{chipman2010bart}.  At the same time, neural networks (NNs) have become extremely accurate on a wide variety of tasks \cite{schmidhuber2015deep}, attracting attention from more traditional machine learning methods.
 
 Seeking even better methods, some researchers have attempted to combine tree-based and NN-based approaches.  For instance, Neural Random Forests \cite{biau2019neural}, builds NNs that are numerically equivalent to RFs, and then continues to train them as though they were newly initialized networks.  Recent research \cite{vanboxel2021neural}, however, suggests creating neural networks this way may not significantly improve performance over both similarly parametrized RFs and NNs.  Another attempted hybridization is Neural Decision Trees \cite{balestriero2017neural}, which replaces the splitting function in trees with neural networks.
 
 Rather than copy an existing ensembling approach exactly into neural networks \cite[for example]{biau2019neural}, we instead adapt the conditional Monte Carlo Markov Chain (MCMC) learning process of BART \cite{chipman2010bart} to an ensemble of neural network architectures.  That is, we train a series of NNs, each one on the residual of the target value and the summed prediction of the remaining NNs.  We further condition acceptance of a model following the Bayes CART method \cite{chipman1998bayesian}.  This sampling procedure of Bayesian Additive Regression Networks (BARN) generalizes the BART method to a new model type.  We describe this in more detail in \autoref{sec:method}.
 
-To evaluate the effectiveness of this approach, we apply BARN to a variety of benchmark data sets \cite{Dua:2019} as used in the Neural Random Forests \cite{biau2019neural} study.  To limit computation time, we restrict our analysis to prototype size (mean 4 neurons) and number networks (fixed at 10) in the ensemble.  We additionally train, however, equivalent sized (to the entire ensemble) NNs and equivalent-count BART forests (i.e. 10 decision trees) for comparison.  We find that BARN, though expensive (in its current implementation), is able to reliably match or beat performance of both alternatives.
+To evaluate the effectiveness of this approach, we apply BARN to a variety of benchmark data sets \cite{Dua:2019} as used in the Neural Random Forests \cite{biau2019neural} study.  We also examine a more recent ecological data set \cite{roman2022bayclump}.  To limit computation time, we restrict our analysis to prototype size (mean 4 neurons) and number networks (fixed at 10) in the ensemble.  We additionally train, however, equivalent sized (to the entire ensemble) NNs and equivalent-count BART forests (i.e. 10 decision trees) for comparison.  We find that BARN, though expensive (in its current implementation), is able to reliably match or beat performance of both alternatives.
 
 \section{Related Work}\label{sec:related}
 
@@ -217,19 +216,13 @@ wisconsin & \textbf{32.12} (1.73)  & 42.70(11.88 ) 0&  35.76 (3.21)  & 40.38(4.7
 
 \begin{figure}[ht]
 \centering
-    \includegraphics[scale=.33]{pres_results.png}
+    \includegraphics[scale=.3]{pres_results.png}
     \caption{BARN almost always matches or beats other methods, and is more stable}
     \label{fig:results}
 \end{figure}
 
-\subsection{BARN and clumped isotope paleothermometry}\label{subsec:therm}
-
-% TODO
-
 
 \subsection{Computational Costs of BARN}\label{subsec:cost}
-
-\crp{Add a new section assessing how computationally expensive BARN is...for instance, you could use microbenmark in R for this.  https://cran.r-project.org/web/packages/microbenchmark/index.html}
 
 While the previous subsections described BARN's performance in terms of error, we also consider the computational cost of running it.  An algorithm which is somewhat less accurate but much cheaper to compute still has value, especially on large data sets.  Conversely, an algorithm which provides robust results but takes significantly longer may still have applications where such stability concerns are prominent.
 
@@ -258,10 +251,20 @@ Based on the current implementation, we see that BARN is significantly slower th
 
 These observations suggest two possible speedups.  First, an implementation in TensorFlow could take advantage of Graphical Processing Units (GPUs), enabling a high level of parallelism for the NN training process.  This parallelism can provide an immediate 5x improvement or better in computation time \cite{lind2019performance}.  Next, the memory loading/unloading operations could be minimized by storing the many small NNs of BARN as one large NN.  That is, keep the overall neuron count, but zero out weights that represent ``cross-NN'' connections.  Further, when training, one can mask off only the relevant components for updating during backpropagation.  This does require some careful programming, as it requires reloading the model with additional available neurons should all of them be in use yet the MCMC process proposes adding a new one to a model.  But this would bypass most of the loading time, further decreasing the overall computation time.
 
+\subsection{BARN and clumped isotope paleothermometry}\label{subsec:therm}
+
+In addition to the benchmark data sets, we also apply BARN to a recent problem in clumped isotope paleothermometry.  A recent study \cite{roman2022bayclump} demonstrated the effectiveness of a Bayesian least squares approach to this data.  Such a method uses a linear model as in OLS, but uses priors on the estimated parameter values informed by earlier studies.  BARN also uses priors but on the model structure (by affecting the size of learned networks) rather than the parameters directly.  An interesting future study might add priors on model weights in BARN as well, but we run standard BARN on this data for now.
+
+The modeling problem itself is to predict carbonate clumped isotope thermometry, $\Delta_{47}$, as a function of temperature \cite{eiler200418o13c16o}.  This is a calibration process; in practice one uses $\Delta_{47}$ as a surrogate for temperature.  The ecological details are beyond the scope of this paper, but there are various studies on this topic \cite{eiler200418o13c16o,roman2022bayclump,petersen2019effects}.
+
+From \autoref{tab:results} and \autoref{fig:results} under the ``isotope'' data set, we can see that BARN performs well relative to the other methods we test.  In this case, the lowest error model is BART, by a significant margin.  But BARN produces very similar results to OLS (albeit at a greatly increased computational cost).  It may be that the structural model of a neural network tends to reduce to an OLS-like result, while the decision trees offer a more distinct approach able to find relations that OLS cannot.
+
+\dvb{Ideally we'd have model error results from \cite{roman2022bayclump,petersen2019effects}}
+
 
 \section{Discussion}\label{sec:dis}
 
-Based on \autoref{tab:results} and \autoref{fig:results}, BARN is competitive with both single hidden layer neural networks and BART.  Note that we recompute BART results rather than using those in \cite{biau2019neural} as that used far more trees.  Particularly, BARN avoids catastrophic failures of the other methods (e.g. large Neural Network for mpg data or BART with the random linear problem).  Additionally, it is generally consistent; in those problems where it is not the most accurate, it is very close to the smallest in magnitude.  In the wisconsin data, BARN seems to be significantly better than the next best BART, even at this prototype scale.  On other problems, BARN has a lower average RMSE, but this falls within expected errors for one of the other methods (note that Neural Random Forests only have this type of improvement \cite{biau2019neural}).  So although BARN is not universally superior, there are situations in which it noticeably outperforms existing methods.
+Based on \autoref{tab:results} and \autoref{fig:results}, BARN is competitive with both single hidden layer neural networks and BART for most data sets.  Note that we recompute BART results rather than using those in \cite{biau2019neural} as that used far more trees.  Particularly, BARN avoids catastrophic failures of the other methods (e.g. large Neural Network for mpg data or BART with the random linear problem).  Additionally, it is generally consistent; in those problems where it is not the most accurate, it is very close to the smallest in magnitude.  In the wisconsin data, BARN seems to be significantly better than the next best BART, even at this prototype scale.  On other problems, BARN has a lower average RMSE, but this falls within expected errors for one of the other methods (note that Neural Random Forests only have this type of improvement \cite{biau2019neural}).  So although BARN is not universally superior, there are situations in which it noticeably outperforms existing methods.
 
 This performance, however, comes at a cost.  While BART and a single NN can be trained in a few to tens of seconds, performing 200 iterations of BARN takes several minutes on these problems.  This may be in part due to implementation details; we use the Scikit-Learn Python module to handle NN training \cite{scikit-learn} and manually code the MCMC procedure.  This means each small network has to be loaded into memory, and we are not taking advantage of GPU capabilities.  Regardless, on the scale of problems considered, BARN even as a prototype was sufficiently fast.
 
@@ -275,7 +278,7 @@ Such problems naturally suggest additional types of models to implement in BARN.
 
 \section{Conclusions}
 
-We introduce and demonstrate the effectiveness of a new model ensemble technique, Bayesian Additive Regression Networks.  This approach adapts the bayesian MCMC method of BART to neural networks rather than decision trees.  On a variety of benchmark problems, BARN often outperformed competing methods and always avoided catastrophic failures.  Though highly accurate, BARN is, however, computationally expensive in its current prototype state.  Future implementations should focus on addressing this and generalizing BARN further to other types of neural networks or generic models.
+We introduce and demonstrate the effectiveness of a new model ensemble technique, Bayesian Additive Regression Networks.  This approach adapts the bayesian MCMC method of BART to neural networks rather than decision trees.  On a variety of benchmark problems, BARN often outperformed competing methods and always avoided catastrophic failures.  On a more recent data set of interest, BARN compared well to other methods, though BART proved superior in this instance.  Though highly accurate, BARN is, however, computationally expensive in its current prototype state.  Future implementations should focus on addressing this and generalizing BARN further to other types of neural networks or generic models.
 
 \clearpage
 
