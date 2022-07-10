@@ -6,7 +6,8 @@ def load_data_file(filename):
     data = pd.read_csv(filename)
     T = np.array(data['Temperature']).reshape([-1,1])
     # convert to appropriate scale
-    X = 10**6/T**2
+    #X = 10**6/(T**2)
+    X = T
     Y = np.array(data['D47']).reshape([-1,1])
     return X,Y
 
