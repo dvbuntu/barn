@@ -2,8 +2,15 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 #plt.ion()
 import pandas as pd
+import argparse
 
-dfile = 'results/res_all.csv'
+parser = argparse.ArgumentParser()
+parser.add_argument('-f','--dfile', default='results/res_all.csv', help='Results output file to read')
+parser.add_argument('-o','--ofile', default='results/pres_', help='Plots prepend name')
+
+args = parser.parse_args()
+dfile = args.dfile
+ofile = args.ofile
 
 df = pd.read_csv(dfile)
 
@@ -26,7 +33,7 @@ g = sns.catplot(x="Model", y="RMSE",
                 split=True, inner='stick')
 #g.set_xticklabels(rotation=20)
 plt.tight_layout(w_pad=1)
-plt.savefig('pres_violin_results.png')
+plt.savefig(ofile + 'violin_results.png')
 plt.close()
 # regular bar plot
 g = sns.catplot(x="Model", y="RMSE",
@@ -38,7 +45,7 @@ g = sns.catplot(x="Model", y="RMSE",
                )
 #g.set_xticklabels(rotation=20)
 plt.tight_layout(w_pad=1)
-plt.savefig('pres_results.png')
+plt.savefig(ofile + 'results.png')
 
 # print table
 M = df.groupby('Dataset').mean()
