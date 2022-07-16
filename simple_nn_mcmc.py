@@ -25,7 +25,7 @@ parser.add_argument('-n','--num_nets', default=10, type=int, help='Number of net
 parser.add_argument('-b','--burn', default=100, type=int, help='Number of burn-in iterations')
 parser.add_argument('-i','--iter', default=100, type=int, help='Number of post-burn-in iterations')
 parser.add_argument('--nrun', default=1, type=int, help='Number of independent runs to try')
-parser.add_argument('-o','--out-prepend', default='', type=str, help='prepend to all output (with say, path)')
+parser.add_argument('-o','--out-prepend', default='results/', type=str, help='prepend to all output (with say, path)')
 parser.add_argument('-s','--datasets', action='append',
                         default=[],
                         help='Add this data (wisconsin, etc)')
