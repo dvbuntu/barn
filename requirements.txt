@@ -1,0 +1,6 @@
+# Feel free to add versions. GitHub Actions can be a bit finicky w/ this
+sklearn
+numpy
+scipy
+rpy2
+matplotlib
