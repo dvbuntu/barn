@@ -10,9 +10,9 @@
 \usepackage[sort&compress,numbers,square]{natbib}
 \bibliographystyle{plainnat}
 
-\title{Bayesian Additive Regression Networks}
+\title{Born in a BARN: Bayesian Additive Regression Networks}
 
-\author{Daniel Van Boxel}
+\author{Danielle Van Boxel}
 \date{\today}
 
 \usepackage{xcolor}
@@ -24,7 +24,7 @@
 
 \begin{abstract}
 
-    We apply Bayesian Additive Regression Tree (BART) principles to training an ensemble of small neural networks for regression tasks.  Using Markov Chain Monte Carlo, Bayesian Additive Regression Trees (BARN) samples from the space of single hidden layer neural networks that are conditioned on their fit to data.  To create an ensemble of these, we apply Gibbs' sampling to update each network against the residual target value (i.e. subtracting the effect of the other networks).  We examine the effectiveness of BARN on several benchmark regression tasks, comparing it to equivalent neuron count single neural networks as well as equivalent tree count BART.  We also apply BARN to a more recent modeling problem and compare with state of the art.  Our Bayesian Additive Regression Networks (BARN) provide more consistent and often more accurate results, at the cost of significantly greater computation time.  BARN seems to perform best on problems with modest data and significant nonlinearity, though this needs further study.  It is highly adaptable, performing well on a variety of problems.
+    We apply Bayesian Additive Regression Tree (BART) principles to training an ensemble of small neural networks for regression tasks.  Using Markov Chain Monte Carlo, Bayesian Additive Regression Networks (BARN) samples from the space of single hidden layer neural networks that are conditioned on their fit to data.  To create an ensemble of these, we apply Gibbs' sampling to update each network against the residual target value (i.e. subtracting the effect of the other networks).  We examine the effectiveness of BARN on several benchmark regression tasks, comparing it to equivalent neuron count single neural networks as well as equivalent tree count BART.  We also apply BARN to a more recent modeling problem and compare with state of the art.  BARN provides more consistent and often more accurate results, at the cost of significantly greater computation time.  BARN seems to perform best on problems with modest data and significant nonlinearity, though this needs further study.  It is highly adaptable, performing well on a variety of problems.
 \end{abstract}
 
 \section{Introduction}\label{sec:intro}
