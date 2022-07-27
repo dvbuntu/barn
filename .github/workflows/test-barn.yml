@@ -36,5 +36,5 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Fitting barn on mpg
-        run: python simple_nn_mcmc.py -s mpg -o testDir/
+        run: python simple_nn_mcmc.py -s mpg -o testDir/ --no-warn
         
