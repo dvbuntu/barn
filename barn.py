@@ -12,7 +12,9 @@ import sklearn.model_selection as skms
 import sklearn.metrics as metrics
 import pickle
 
-BIG = 2**32-1
+INFO = np.iinfo(np.int32)
+SMALL = info.min + 1
+BIG = info.max - 1
 
 class NN(object):
     def __init__(self, num_nodes=10, weight_donor=None, l=10, lr=0.01, r=None):
