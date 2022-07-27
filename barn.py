@@ -13,8 +13,8 @@ import sklearn.metrics as metrics
 import pickle
 
 INFO = np.iinfo(np.int32)
-SMALL = info.min + 1
-BIG = info.max - 1
+SMALL = INFO.min + 1
+BIG = INFO.max - 1
 
 class NN(object):
     def __init__(self, num_nodes=10, weight_donor=None, l=10, lr=0.01, r=None):
