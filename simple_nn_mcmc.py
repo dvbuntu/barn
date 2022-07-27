@@ -50,7 +50,7 @@ burn = args.burn
 total = burn + args.iter
 num_batch = args.num_batch
 batch_size = args.iter//num_batch
-BIG = 2**32-1
+BIG = 2**31-1 # biggest signed 4byte int
 if len(args.datasets) == 0:
     args.datasets = ['random']
 
