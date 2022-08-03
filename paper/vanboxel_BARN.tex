@@ -226,11 +226,11 @@ wisconsin & \textbf{32.12} (1.73)  & 42.70(11.88 ) 0&  35.76 (3.21)  & 40.38(4.7
 
 While the previous subsections described BARN's performance in terms of error, we also consider the computational cost of running it.  An algorithm which is somewhat less accurate but much cheaper to compute still has value, especially on large data sets.  Conversely, an algorithm which provides robust results but takes significantly longer may still have applications where such stability concerns are prominent.
 
-\autoref{tab:times} shows the mean (and standard deviation) of computation times for our various methods on the benchmark problems.  Note that we are using scikit-learn \cite{scikit-learn} with Python to perform the NN, BARN, and OLS computations (whereas BART is called from R).  Especially for neural networks, there are faster implementations available such as TensorFlow \cite{tensorflow2015whitepaper} or PyTorch \cite{paszke2019pytorch}.   Therefore we consider these measurements as preliminary.  
+\autoref{tab:times} shows the mean (and standard deviation) of computation times for our various methods on the benchmark problems.  These values encompass the total etup and raining time but not inference time.  Note that we are using scikit-learn \cite{scikit-learn} with Python to perform the NN, BARN, and OLS computations (whereas BART is called from R).  Especially for neural networks, there are faster implementations available such as TensorFlow \cite{tensorflow2015whitepaper} or PyTorch \cite{paszke2019pytorch}.   Therefore we consider these measurements as preliminary.  
 
 \begin{table}[htb]
 \centering
-\caption{Average training time (and standard deviation) over 13 runs of various methods on different datasets.  Note that OLS is the fastest across all dataset.}
+\caption{Average training time (and standard deviation) in seconds over 13 runs of various methods on different datasets.  Note that OLS is the fastest across all dataset.}
 \begin{tabular}{lrrrr}
 Dataset   &     BARN &    Big NN &      BART & OLS\\ \hline
 boston     & 74.20 (7.25)  & 0.10 (0.05)&  0.19 (0.03)  & $<$0.01 ($<$0.01) \\
@@ -246,8 +246,14 @@ wisconsin  & 38.43 (3.14)  & 0.04 (0.03)&  0.09 ($<$0.01)  & $<$0.01 ($<$0.01) \
     \label{tab:times}
 \end{table}
 
+\begin{figure}[ht]
+\centering
+    \includegraphics[scale=.5]{time_results.png}
+    \caption{BARN almost always matches or beats other methods, and is more stable}
+    \label{fig:time_results}
+\end{figure}
 
-Based on the current implementation, we see that BARN is significantly slower than all of the other methods tested.  Note, however, that the equivalently sized neural network is not nearly as slow (about 1000x faster than BARN).  Part of this is that BARN has to train networks many times (i.e. the burn in period plus the sampling period, 200 iterations in this study).  But part of this cost is also constantly loading/unloading BARN's NNs into memory (as stored by scikit-learn).
+Based on the current implementation, we see that BARN is significantly slower than all of the other methods tested.  Note, however, that the equivalently sized neural network is not nearly as slow (about 1000x faster than BARN).  Part of this is that BARN has to train networks many times (i.e. the burn in period plus the sampling period, 200 iterations in this study).  But part of this cost is also constantly loading/unloading BARN's NNs into memory (as stored by scikit-learn).  Additionally, we see from \autoref{fig:time_results} how computation speed varies with problem size.  In particular, it is \emph{not} the largest problem (in neither number of data points nor number of features) where BARN takes the most time.  Even considering the product of these values (which is proportional to the number of floating point operations), the largest size problem still does not take the most time.  This is the crimes data set; it may have some peculiar behavior (such as mostly zero features that may be optimized away).  The remaining data sets seem to mostly scale with this product problem size, though all of these are relatively small problems.
 
 These observations suggest two possible speedups.  First, an implementation in TensorFlow could take advantage of Graphical Processing Units (GPUs), enabling a high level of parallelism for the NN training process.  This parallelism can provide an immediate 5x improvement or better in computation time \cite{lind2019performance}.  Next, the memory loading/unloading operations could be minimized by storing the many small NNs of BARN as one large NN.  That is, keep the overall neuron count, but zero out weights that represent ``cross-NN'' connections.  Further, when training, one can mask off only the relevant components for updating during backpropagation.  This does require some careful programming, as it requires reloading the model with additional available neurons should all of them be in use yet the MCMC process proposes adding a new one to a model.  But this would bypass most of the loading time, further decreasing the overall computation time.
 
