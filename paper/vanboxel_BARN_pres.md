@@ -2,8 +2,8 @@
 title: Born in a BARN
 subtitle: Bayesian Additive Regression Networks
 author:
-- Dan Van Boxel
-date: Los Alamos - AZ Days, 16 May 2022
+- Daniel Van Boxel
+date: Los Alamos - AZ Days, ~~16 May 2022~~ 15 Aug 2022
 institute: University of Arizona
 theme: AnnArbor
 colortheme: albatross
@@ -364,6 +364,12 @@ $$ P(R_k |X, M_k) = \prod_{i\in  valid} \frac{1}{\sigma \sqrt{\pi}} e^{-\frac{1}
 * Better justify model prior/transition probabilities
 * Generalize to other types of NN (e.g. propose a new layer, or switch to CNN layer)
 * Generalize to *arbitrary* ensemble-style models (Bayesian Additive Regression *Models*?)
+
+## Acknowledgements
+
+* Cristian Rom${\'a}$n Palacios - additional data set and ongoing collaboration
+* Kevin Lin - many Monte Carlo foundations and suggestions
+* Helen Zhang - introduction to BART and related methods
 
 ## Bibliography
 
