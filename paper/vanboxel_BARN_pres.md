@@ -290,6 +290,7 @@ $$ P(R_k |X, M_k) = \prod_{i\in  valid} \frac{1}{\sigma \sqrt{\pi}} e^{-\frac{1}
 | crimes | 101 | 1994 |
 | diabetes | 10 | 442 |
 | fires | 10 | 517 |
+| isotope | 1 | 700 |
 | mpg | 7 | 398 |
 | random | 10 | 1000 |
 | wisconsin | 32 | 194 |
@@ -317,25 +318,26 @@ $$ P(R_k |X, M_k) = \prod_{i\in  valid} \frac{1}{\sigma \sqrt{\pi}} e^{-\frac{1}
 ## RMSE Accuracy
 
 ::: columns
-:::: {.column width=30%}
+:::: {.column width=25%}
 * Compare to BART and equivalent size single big NN (i.e. $m = \sum m_k$)
 * Compute $\bar{RMSE}(\sigma)$ over 13 independent runs
 * BARN more stable and often more accurate
 
 ::::
 
-:::: {.column width=70%}
+:::: {.column width=75%}
 
-| Dataset   |     BARN |    Big NN |      BART |
-|:----------|---------:|----------:|----------:|
-| boston    | 4.64 ( 0.447)|  8.11 ( 4.958)|  *4.10* ( 0.556)|
-| concrete  | 7.32 ( 0.537)| 12.68 ( 7.990)|  *6.82* ( 0.436)|
-| crimes    | *0.14* ( 0.009)|  0.18 ( 0.041)|  0.15 ( 0.008)|
-| diabetes  |54.07 ( 2.539)| *53.74* ( 2.564)| 58.72 ( 2.878)|
-| fires     |*58.25* (38.845)| 58.35 (39.316)| 77.17 (30.878)|
-| mpg       | *3.43* ( 0.399)| 71.88 (52.497)|  3.44 ( 0.450)|
-| random    |*11.46* ( 0.552)| 11.78 ( 0.639)| 55.41 (14.865)|
-| wisconsin |*33.48* ( 2.497)| 45.15 (10.365)| 35.76 ( 3.208)|
+| Dataset   |     BARN |    Big NN |      BART | OLS |
+|:----------|---------:|----------:|----------:|----:|
+| boston    | 4.64 ( 0.45)|  8.11 ( 4.96)|  *4.10* ( 0.56)|  4.83 (0.45) |
+| concrete  | 7.32 ( 0.54)| 12.68 ( 7.99)|  *6.82* ( 0.44)| 10.60 (0.36) |
+| crimes    | *0.14* ( 0.01)|  0.18 ( 0.04)|  0.15 ( 0.01)| 0.14(0.01) |
+| diabetes  |54.07 ( 2.54)| 53.74 ( 2.56)| 58.72 ( 2.88)| *53.67* (2.36) |
+| fires     | *55.01* (39.88)| 55.18 (39.90) | 72.28 (32.11) | 56.46 (38.68)|
+| isotope   | 0.03  (<0.01)| 0.04 (0.01) |  0.03 (<0.01 ) | *0.03* (<0.01)|
+| mpg       | 3.43 ( 0.40)| 71.88 (52.50)|  3.44 ( 0.45)| *3.33* (0.29) |
+| random    |*11.46* ( 0.55)| 11.78 ( 0.64)| 55.41 (14.87)| *10.02* (0.34) |
+| wisconsin |*33.48* ( 2.50)| 45.15 (10.37)| 35.76 ( 3.21)| 40.38(4.77) |
 
 ::::
 
@@ -344,7 +346,24 @@ $$ P(R_k |X, M_k) = \prod_{i\in  valid} \frac{1}{\sigma \sqrt{\pi}} e^{-\frac{1}
 
 ## Graphic Accuracy
 
-![BARN results always better than or comparable previous methods](pres_results.png){ height=80% }
+![BARN results always better than or comparable to previous methods](pres_results.png){ height=80% }
+
+## Isotope Dataset Comparison
+
+::: columns
+:::: {.column width=30%}
+* Predict carbonate clumped isotope thermometry, $\Delta_{47}$ from temperature
+* Recent study [@roman2022bayclump] suggests shows Bayesian Least Squares is effective
+* BARN is comparable to these methods, and better than a single neural network and BART
+
+::::
+
+:::: {.column width=70%}
+![BARN is competitive with other methods for modeling D47 data](iso_results.png){ height=80% }
+::::
+
+:::
+
 
 # Discussion
 
@@ -372,5 +391,7 @@ $$ P(R_k |X, M_k) = \prod_{i\in  valid} \frac{1}{\sigma \sqrt{\pi}} e^{-\frac{1}
 * Helen Zhang - introduction to BART and related methods
 
 ## Bibliography
+
+\footnotesize
 
 [//]: # (Fixing highlighting_)
