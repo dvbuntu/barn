@@ -54,8 +54,9 @@ for k in ndata.keys():
 df2 = df2.astype({'N Features':'int32','N Data':'int32'})
 
 bdf = df2[df2.Model==' BARN']
+bdf['Data x Features'] = bdf['N Features'] * bdf['N Data']
 
-fig, ax = plt.subplots(1,2, sharey=True, sharex=False)
+fig, ax = plt.subplots(1,3, sharey=True, sharex=False, figsize=(12,4))
 
 sns.scatterplot(data=bdf, x='N Data', y='Time', ax=ax[0], alpha=0.5)
 ax[0].set_xscale('log')
@@ -71,6 +72,11 @@ sns.scatterplot(data=bdf, x='N Features', y='Time', ax=ax[1], alpha=0.5)
 ax[1].set_xscale('log')
 ax[1].set_ylabel('Time (s)')
 ax[1].set_xlabel('N Features (log scale)')
+
+sns.scatterplot(data=bdf, x='Data x Features', y='Time', ax=ax[2], alpha=0.5)
+ax[2].set_xscale('log')
+ax[2].set_ylabel('Time (s)')
+ax[2].set_xlabel('Data x Features (log scale)')
 
 fig.suptitle('BARN Computation Time Across Problem Sizes')
 
