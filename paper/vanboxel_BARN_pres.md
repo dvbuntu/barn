@@ -36,7 +36,7 @@ header-includes:
 * *Concept*: Find a better method for regression models.
 * *Implementation*: Adapt BART procedure to use MCMC to sample from space of neural network *models* conditioned on error.
 * *Related Work*: Related Regression Techniques [@chipman2010bart; @breiman2001random], MCMC/Gibbs' [@metropolis1953equation; @geman1984stochastic]
-* *Data*: UCI Benchmark regression problems [@dua2017uci]
+* *Data*: UCI Benchmark regression problems [@dua2017uci], isotope measurement problem, [@roman2022bayclump]
 
 # Background
 
@@ -371,11 +371,16 @@ $$ P(R_k |X, M_k) = \prod_{i\in  valid} \frac{1}{\sigma \sqrt{\pi}} e^{-\frac{1}
 
 * RMSE often minimal for BARN, but within expected values (i.e. $\pm 2\sigma$) for other models
 	* $\implies$ Better to randomly retry with BART or big NN?
-* Computation time much longer for BARN than BART/big NN
+* Computation time much longer for BARN (~100s) than BART/big NN/OLS (~0.1s)
 	* BART directly proposes new tree, no training step required
 	* Big NN is efficient for loading/running model
 	* May mitigate by encoding ensemble as a big NN (zeroing cross model connection weights)
 	* Also try GPU/TensorFlow implementation for speed
+
+## Computation Time
+
+![BARN results always better than or comparable to previous methods](pres_results.png){ height=80% }
+
 
 ## Future Work
 
