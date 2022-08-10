@@ -379,7 +379,7 @@ $$ P(R_k |X, M_k) = \prod_{i\in  valid} \frac{1}{\sigma \sqrt{\pi}} e^{-\frac{1}
 
 ## Computation Time
 
-![BARN results always better than or comparable to previous methods](pres_results.png){ height=80% }
+![BARN is slow even on small problems](time_results.png){ height=80% }
 
 
 ## Future Work
