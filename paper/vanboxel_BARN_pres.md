@@ -2,8 +2,8 @@
 title: Born in a BARN
 subtitle: Bayesian Additive Regression Networks
 author:
-- Daniel Van Boxel
-date: Los Alamos - AZ Days, ~~16 May 2022~~ 15 Aug 2022
+- Danielle Van Boxel
+date: AMS JMM, 17 Sept 2022
 institute: University of Arizona
 theme: AnnArbor
 colortheme: albatross
@@ -38,7 +38,7 @@ header-includes:
 * *Related Work*: Related Regression Techniques [@chipman2010bart; @breiman2001random], MCMC/Gibbs' [@metropolis1953equation; @geman1984stochastic]
 * *Data*: UCI Benchmark regression problems [@dua2017uci], isotope measurement problem, [@roman2022bayclump]
 
-# Background
+# Motivation
 
 ## Regression Problem
 
@@ -49,7 +49,7 @@ header-includes:
 * Many numeric input variables, $x_i \in \mathbb{R}^d$
 * Single continuous output, $y_i \in \mathbb{R}$
 * Seek $f(x_i) \approx y_i$
-* Ex: Linear regression, decision trees, neural networks, etc
+* What should $f$ look like?  Linear regression, decision trees, neural networks, etc
 ::::
 :::: {.column width=70%}
 
@@ -57,6 +57,24 @@ header-includes:
 
 ::::
 :::
+
+## Features of Ideal Regression Model
+
+* Accurate - low testing error, typically measured by Root Mean Square Error (RMSE)
+* Fast - low computation time relative to problem size, measured in seconds or $O(.)$
+* Broadly Applicable - functional form can handle different types of data relationships (linear and nonlinear), collinearity, and other issues.  Beware "No Free Lunch" theorems
+
+## Original Cause: Neural Random Forests
+
+![Neural Random Forest performing well on a variety of problems [@biau2019neural]](nrf_nobart.png){ height=80% }
+
+## Original Cause: ~~Neural Random Forests~~ BART
+
+![BART outperforms NRF and related methods [@biau2019neural]](nrf_all.png){ height=80% }
+
+## Hypothesis
+
+Rather than try to change BART into a Neural Network, is it useful to train an ensemble of Neural Networks with a BART-like procedure?
 
 ## Model Ensembling
 
@@ -161,6 +179,16 @@ $$ A(x, x') = min(1, \frac{q(x', x) P(x')}{q(x, x') P(x)})$$
 
 $$ \alpha(T_j, T_j') = min(1, \frac{q(T_j', T_j) P(R_k|X,T_j') P(T_j')}{q(T_j, T_j') P(R_k|X,T_j) P(T_j)})$$
 
+## BART MCMC Acceptance Ratio Explanation
+
+$$ \alpha(T_j, T_j') = min(1, \frac{q(T_j', T_j) P(R_k|X,T_j') P(T_j')}{q(T_j, T_j') P(R_k|X,T_j) P(T_j)})$$
+
+* $\alpha(T_j, T_j')$ - Probability of accepting new tree, $T_j'$
+* $q(T_j, T_j')$ - Probability of proposing new tree, $T_j'$, from old tree, $T_j$, a.k.a. the transition probability
+* $P(R_k|X,T_j')$ - Probability of target residual, $R_k$, given data, $X$, and proposed new tree, $T_j'$, a.k.a. the error probability
+* $P(T_j')$ - Prior probability of proposed tree, $T_j'$, based on tree size
+* $P(R_k|X,T_j') P(T_j')$ - Posterior probability of proposed tree given the data and model fit
+
 ## Neural Networks
 
 ::: columns
@@ -261,12 +289,24 @@ $$ P(R_k |X, M_k) = \prod_{i\in  valid} \frac{1}{\sigma \sqrt{\pi}} e^{-\frac{1}
 
 ## Put It All Together
 
-* Fix number of networks, $N=10$
+* Fix number of networks, say $N=10$
 * Initialize all networks to $M=1$ neuron and training on $R_k = \frac{Y}{N}$ (equal share)
 * Gibbs' sample to propose/update one NN at a time with current residual
 * Train proposed model, compute likelihood on validation data
 * Accept/reject with $A$
 * After burn-in period (each model has up to 100 updates), every step provides an ensemble of models, choose last/best (on validation)
+
+## Toy Example: Three Networks
+
+![Fix $M_1$ and $M_2$, propose change to $M_3$, $M_3'$](barn_ex1.png){ height=80% }
+
+## Toy Example: Three Networks
+
+![Train $M_3'$ against $(x,R_3)$ and compute MCMC probabilities](barn_ex2.png){ height=80% }
+
+## Toy Example: Three Networks
+
+![Compare $U(0,1)$ to $A(M_3, M_3')$ and update $M_3$](barn_ex3.png){ height=80% }
 
 # Results
 
@@ -369,6 +409,8 @@ $$ P(R_k |X, M_k) = \prod_{i\in  valid} \frac{1}{\sigma \sqrt{\pi}} e^{-\frac{1}
 
 ## Limitations
 
+* BARN is adaptable, integrating bayesian ensembling and architecture search
+    * Ensemble size and MCMC constants are hyperparameters
 * RMSE often minimal for BARN, but within expected values (i.e. $\pm 2\sigma$) for other models
 	* $\implies$ Better to randomly retry with BART or big NN?
 * Computation time much longer for BARN (~100s) than BART/big NN/OLS (~0.1s)
