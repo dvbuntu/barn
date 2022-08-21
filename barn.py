@@ -215,9 +215,12 @@ class BARN(object):
             ax[0].set_title('Initial BARN')
             ax[0].set_ylabel('Prediction')
             ax[0].text(0.05, 0.85, f'$R^2 = $ {r2h:0.4}\n$RMSE = $ {rmseh:0.4}', transform=ax[0].transAxes)
-        else:
+        elif extra_slots + initial == 0:
             # pretend to have a list so we can access by index
             ax = [ax]
+        else:
+            # should be ok
+            pass
 
         # final fit
         Yh2 = self.predict(self.Xte)

@@ -7,10 +7,12 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('-f','--dfile', default='results/res_all.csv', help='Results output file to read')
 parser.add_argument('-o','--ofile', default='results/pres_', help='Plots prepend name')
+parser.add_argument('-c','--cname', default='RMSE', help='Variable name to plot')
 
 args = parser.parse_args()
 dfile = args.dfile
 ofile = args.ofile
+cname = args.cname
 
 df = pd.read_csv(dfile)
 
@@ -21,10 +23,10 @@ for i,r in df.iterrows():
     for m in models:
         rows.append([dataname[0], m, r[m]])
 
-df2 = pd.DataFrame(rows, columns=['Dataset', 'Model', 'RMSE'])
+df2 = pd.DataFrame(rows, columns=['Dataset', 'Model', cname])
 
 # violin plot
-g = sns.catplot(x="Model", y="RMSE",
+g = sns.catplot(x="Model", y=cname,
                 col="Dataset",
                 data=df2, kind="violin",
                 height=6, aspect=.7,
@@ -36,7 +38,7 @@ plt.tight_layout(w_pad=1)
 plt.savefig(ofile + 'violin_results.png')
 plt.close()
 # regular bar plot
-g = sns.catplot(x="Model", y="RMSE",
+g = sns.catplot(x="Model", y=cname,
                  col="Dataset",
                 data=df2, kind="bar",
                 height=6, aspect=.7,

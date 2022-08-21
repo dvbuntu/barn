@@ -35,6 +35,7 @@ parser.add_argument('--bart', default=False, action='store_true')
 parser.add_argument('--big-nn', default=False, action='store_true')
 parser.add_argument('--ols', default=False, action='store_true')
 parser.add_argument('-m','--num_batch', default=20, type=int, help='Number of batches for batch mean analysis')
+parser.add_argument('--seed', default=54, type=int, help='Random seed')
 
 args = parser.parse_args()
 
@@ -50,6 +51,7 @@ burn = args.burn
 total = burn + args.iter
 num_batch = args.num_batch
 batch_size = args.iter//num_batch
+seed = args.seed
 if len(args.datasets) == 0:
     args.datasets = ['random']
 
@@ -78,13 +80,13 @@ for run_num in range(args.nrun):
         if dname == 'random':
             # synth data
             sig = 10
-            X, Y = skds.make_regression(n_samples=1000, n_features=10, n_informative=8, noise=sig)
+            X, Y = skds.make_regression(n_samples=1000, n_features=10, n_informative=8, noise=sig, random_state=seed+run_num)
 
             # split into train, valid, test
             Xtr, XX, Ytr, YY = skms.train_test_split(X,Y, test_size=0.5) # training
             Xva, Xte, Yva, Yte = skms.train_test_split(XX,YY, test_size=0.5) # valid and test
         else:
-            data = load_data(dname, seed=54+run_num)
+            data = load_data(dname, seed=seed+run_num)
             Xtr, Xva, Xte, Ytr, Yva, Yte = data
             # fix shape of Y
             Ytr = Ytr.reshape(-1)
@@ -119,7 +121,7 @@ for run_num in range(args.nrun):
             tot_neurons = sum([N.num_nodes for N in nets.cyberspace])
             cur_time = time.time()
             Nb = NN(tot_neurons, lr=0.1)
-            Nb.train(Xtr,Ytr)
+            Nb.train(Xtr,Ytr,epochs=10*total)
             time_list.append(str(time.time()-cur_time))
             Yhb = Nb.model.predict(Xte)
             r2hb = np.abs(metrics.r2_score(Yte, Yhb))
