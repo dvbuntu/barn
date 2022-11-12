@@ -56,7 +56,7 @@ We adapt Bayesian Additive Regression Tree (BART)\cite{chipman2010bart} principl
 			\begin{myblock}{BARN Fundamentals}
 
 \begin{enumerate}
-\item Initialize all networks to $M=1$ neuron.
+\item Initialize all networks to $M=1$ neuron
 \item Gibbs' sample to propose/update one NN with residual
 \item Train proposed $M_k'$, compute $A(M_k,M_k')$, Accept/reject
 \item After burn-in period, every step provides an ensemble of models, choose last/best (on validation)
@@ -95,7 +95,7 @@ $$
 \begin{figure}[h]
 \centering
     \includegraphics[scale=.62]{pres_results.png}
-    \caption{BARN almost always matches or beats RMSE of other methods, and is more stable}
+    \caption{BARN almost always matches or beats RMSE of other methods and is more stable}
     \label{fig:results}
 \end{figure}
 		\end{myblock}
@@ -103,7 +103,7 @@ $$
 \begin{itemize}
 \item Combines bayesian ensembling and architecture search
 \item Error often minimal, but near other methods (i.e. $\pm 2\sigma$)
-\item Computation time much longer for (~100s vs ~0.1s)
+\item Computation time much longer for ($\approx$100s vs $\approx$0.1s)
 \end{itemize}
 		\end{myblock}
 		\begin{myblock}{References}
