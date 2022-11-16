@@ -1,5 +1,5 @@
 \documentclass{beamer}
-\usepackage[orientation=landscape,size=custom,width=106,height=60,scale=1.4,debug]{beamerposter}
+\usepackage[orientation=landscape,size=custom,width=106,height=90,scale=1.4,debug]{beamerposter}
 \mode<presentation>{\usetheme{DVB}}
 \usepackage[utf8]{inputenc}
 \usepackage{hyperref} %enable hyperlink for urls
@@ -14,13 +14,13 @@
 \author{Danielle Van Boxel$^{1}$}
 \institute[UA:AM]{$^{1}$University of Arizona, Applied Math Program \\ \hphantom{1cm}}
 \date{December 8, 2022}
-\webpage{github.com/dvbuntu/barn}
+\webpage{\href{github.com/dvbuntu/barn}{github.com/dvbuntu/barn} \raisebox{-.2\height}{\includegraphics[scale=0.4]{qr_barn}}}
 \email{vanboxel@math.arizona.edu}
 \posterlogo{gidp_am.png}
 
 % edit this depending on how tall your header is. We should make this scaling automatic :-/
 \newlength{\columnheight}
-\setlength{\columnheight}{54cm}
+\setlength{\columnheight}{90cm}
 
 \begin{document}
 \begin{frame}
@@ -34,14 +34,29 @@
 %    We apply Bayesian Additive Regression Tree (BART) principles to training an ensemble of small neural networks for regression tasks.  Using Markov Chain Monte Carlo, Bayesian Additive Regression Networks (BARN) samples from the space of single hidden layer neural networks that are conditioned on their fit to data.  To create an ensemble of these, we apply Gibbs' sampling to update each network against the residual target value (i.e. subtracting the effect of the other networks).  We examine the effectiveness of BARN on several benchmark regression tasks, comparing it to equivalent neuron count single neural networks as well as equivalent tree count BART.  We also apply BARN to a more recent modeling problem and compare with state of the art.  BARN provides more consistent and often more accurate results, at the cost of significantly greater computation time.  BARN seems to perform best on problems with modest data and significant nonlinearity, though this needs further study.  It is highly adaptable, performing well on a variety of problems.
 We adapt Bayesian Additive Regression Tree (BART)\cite{chipman2010bart} principles to training an ensemble of small neural networks\cite{schmidhuber2015deep} for regression tasks.  Using Markov Chain Monte Carlo\cite{hastings1970monte}, Bayesian Additive Regression Networks (BARN) samples from the space of single hidden layer neural networks that are conditioned on their fit to data.  BARN provides more consistent and often more accurate results, at the cost of significantly greater computation time.
 		\end{myblock}
-		\begin{myblock}{Background: BART \& Beyond}
+		\begin{myblock}{Background: Random Forests, BART, \& Beyond}
+            \raggedleft{\Large{Random Forest}} \\ \vspace{-2em}
+\begin{figure}[h]
+\includegraphics[scale=0.8]{pres_rf.png}
+    \caption{Random Forest is ensemble of decision trees trained on different subdata sets \cite{breiman2001random}}
+\end{figure}
+
+            \raggedleft{\Large{BART}} \\ \vspace{-2em}
 \begin{figure}[h]
 \includegraphics[scale=0.8]{pres_bart.png}
-\caption{Held Out Tree Trained Against Residual With MCMC \cite{chipman2010bart}}
+\caption{BART uses MCMC to sample from posterior of accurate reasonably sized decision trees by fixing all but one tree and proposing a small mutation \cite{chipman2010bart}}
 \end{figure}
+
+            \raggedleft{\Large{MCMC}} \\ \vspace{-1.5em}
 \begin{figure}[h]
 \includegraphics{balance.png}
 \caption{Markov Chain Monte Carlo uses Accept/Reject to Maintain Stationary Distribution\cite{stepanov2021math}}
+\end{figure}
+
+            \raggedleft{\Large{NN Proposal}} \\ \vspace{-1.5em}
+\begin{figure}[h]
+\includegraphics{barn_trans.png}
+    \caption{Proposed mutation of neural network for BARN process adds or subtracts a neuron and retains weights}
 \end{figure}
 		\end{myblock}
 	}
@@ -57,9 +72,9 @@ We adapt Bayesian Additive Regression Tree (BART)\cite{chipman2010bart} principl
 
 \begin{enumerate}
 \item Initialize all networks to $M=1$ neuron
-\item Gibbs' sample to propose/update one NN with residual
+\item Gibbs' sample to propose one NN with residual
 \item Train proposed $M_k'$, compute $A(M_k,M_k')$, Accept/reject
-\item After burn-in period, every step provides an ensemble of models, choose last/best (on validation)
+\item After burn-in period (default 100 steps), every step provides an ensemble of models, choose last/best (on validation)
 \end{enumerate}
 
 $$
@@ -78,19 +93,14 @@ $$
 $$
 			\end{myblock}
 			\begin{myblock}{BARN Toy Example}
+Starting with say $N=3$ networks in the ensemble and one validation data point, step through one iteration of fixing $M_1$ and $M_2$ while considering a new $M_3'$.
+
 \begin{figure}[h]
 \includegraphics[scale=0.75]{barn_ex3.png}
-\caption{Fix $M_{i\neq 3}$, Propose and Train $M_3'$, Accept $M_3'$}
+    \caption{Fix $M_{i\neq 3}$, Propose and Train $M_3'$, Compute $A(M_3'|M_3)$, Accept $M_3'$}
 \end{figure}
 			\end{myblock}
-	}
-	\end{minipage}
-	%\end{minipage}\end{beamercolorbox}
-	\end{column}
-%%% BEGIN COLUMN 3
-	\begin{column}{.33\textwidth}
-	\begin{minipage}{.98\textwidth}  % tweaks the width, makes a new \textwidth
-		\parbox[t][\columnheight]{\textwidth}{ % pushes things to top
+
 		\begin{myblock}{BARN Benchmark Results}
 \begin{figure}[h]
 \centering
@@ -98,12 +108,54 @@ $$
     \caption{BARN almost always matches or beats RMSE of other methods and is more stable}
     \label{fig:results}
 \end{figure}
+
+        \end{myblock}
+
+	}
+
+	\end{minipage}
+	%\end{minipage}\end{beamercolorbox}
+	\end{column}
+%%% BEGIN COLUMN 3
+	\begin{column}{.33\textwidth}
+	\begin{minipage}{.98\textwidth}  % tweaks the width, makes a new \textwidth
+		\parbox[t][\columnheight]{\textwidth}{ % pushes things to top
+		\begin{myblock}{Additional BARN Results}
+\begin{figure}[h]
+\centering
+    \includegraphics[scale=1.0]{mpg_phi.png}
+    \caption{Typical error progression during BARN MCMC process shows convergence}
+    \label{fig:error}
+\end{figure}
+
+
+\begin{figure}[h]
+\centering
+    \includegraphics[scale=1.2]{iso_results.png}
+    \caption{BARN can be competitive with state of the art results with minimal tuning}
+    \label{fig:results_isotope}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+    \includegraphics[scale=1.]{time_results.png}
+    \caption{BARN may be slow even on small problems but time scales with difficulty, not just problem size}
+    \label{fig:results_time}
+\end{figure}
+
 		\end{myblock}
 			\begin{myblock}{Conclusion}
 \begin{itemize}
 \item Combines bayesian ensembling and architecture search
 \item Error often minimal, but near other methods (i.e. $\pm 2\sigma$)
 \item Computation time much longer for ($\approx$100s vs $\approx$0.1s)
+\end{itemize}
+		\end{myblock}
+			\begin{myblock}{Further Work}
+\begin{itemize}
+\item Implement as \texttt{R} and Python package
+\item Better justify model prior/transition probabilities
+\item Generalize to \emph{arbitrary} ensemble-style models (SVMs?)
 \end{itemize}
 		\end{myblock}
 		\begin{myblock}{References}
